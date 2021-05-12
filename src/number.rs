@@ -1,5 +1,5 @@
 use crate::common::{is_8digits_le, AsciiStr, ByteSlice};
-use crate::float::Float;
+use crate::float::{Float, INT_POW10};
 
 const MIN_19DIGIT_INT: u64 = 100_0000_0000_0000_0000;
 
@@ -15,20 +15,34 @@ impl Number {
     #[inline]
     fn is_fast_path<F: Float>(&self) -> bool {
         F::MIN_EXPONENT_FAST_PATH <= self.exponent
-            && self.exponent <= F::MAX_EXPONENT_FAST_PATH
+            && self.exponent <= F::MAX_DISGUISED_EXPONENT_FAST_PATH
             && self.mantissa <= F::MAX_MANTISSA_FAST_PATH
             && !self.many_digits
     }
 
     #[inline]
     pub fn try_fast_path<F: Float>(&self) -> Option<F> {
-        if self.is_fast_path::<F>() {
+        let is_fast = self.is_fast_path::<F>();
+        if is_fast && self.exponent <= F::MAX_EXPONENT_FAST_PATH {
             let mut value = F::from_u64(self.mantissa);
             if self.exponent < 0 {
                 value = value / F::pow10_fast_path((-self.exponent) as _);
             } else {
                 value = value * F::pow10_fast_path(self.exponent as _);
             }
+            if self.negative {
+                value = -value;
+            }
+            Some(value)
+        } else if is_fast {
+            let max_exp = F::MAX_EXPONENT_FAST_PATH;
+            let shift = self.exponent - max_exp;
+            let mant = self.mantissa.checked_mul(INT_POW10[shift as usize])?;
+            if mant > F::MAX_MANTISSA_FAST_PATH {
+                return None;
+            }
+            let mut value = F::from_u64(mant);
+            value = value * F::pow10_fast_path(max_exp as _);
             if self.negative {
                 value = -value;
             }
