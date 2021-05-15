@@ -5,3 +5,8 @@
 [submodule "extras/simple-bench/ext"]
     path = extras/simple-bench/ext
     url = https://github.com/lemire/simple_fastfloat_benchmark.git
+
+[submodule "data/test-parse-golang/parse-number-fxx-test-data"]
+	path = data/test-parse-golang/parse-number-fxx-test-data
+	url = https://github.com/nigeltao/parse-number-fxx-test-data
+	shallow = true
