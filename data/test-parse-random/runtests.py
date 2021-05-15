@@ -147,25 +147,34 @@ def projectdir():
 def targetdir():
     return os.path.join(projectdir(), 'target')
 
-def releasedir():
+def releasedir(target=None):
+    if target is not None:
+        return os.path.join(targetdir(), target, 'release')
     return os.path.join(targetdir(), 'release')
 
-def rustc_dec2flt():
+def rustc_dec2flt(target=None):
     path = os.getcwd()
     os.chdir(projectdir())
     features = ['comprehensive_float_test']
     features = '--features=' + ','.join(features)
-    check_call(['cargo', 'build', '--release', features])
+    if target is not None:
+        check_call(['cross', 'build', '--target', target, '--release', features])
+    else:
+        check_call(['cargo', 'build', '--release', features])
     os.chdir(path)
 
 
-def run(test):
+def run(test, target=None):
     global test_name
     test_name = test
 
     t0 = time.perf_counter()
     msg("setting up supervisor")
-    exe = os.path.join(releasedir(), test)
+    args = ['--bin', test, '--features=comprehensive_float_test']
+    if target is None:
+        exe = ['cargo', 'run'] + args
+    else:
+        exe = ['cross', 'run'] + args + ['--target', target]
     proc = Popen(exe, bufsize=1<<20 , stdin=PIPE, stdout=PIPE, stderr=PIPE)
     done = multiprocessing.Value(ctypes.c_bool)
     queue = multiprocessing.Queue(maxsize=5)#(maxsize=1024)
@@ -218,11 +227,15 @@ def main():
     whitelist = [i for i in sys.argv[1:] if not i.startswith('-')]
     if whitelist:
         tests = [test for test in tests if test in whitelist]
+    target = None
+    target_arg = [i for i in sys.argv[1:] if i.startswith('--target=')]
+    if target_arg:
+        target = target_arg[0][len('--target='):]
     if not tests:
         print("Error: No tests to run")
         sys.exit(1)
     # Compile first for quicker feedback
-    rustc_dec2flt()
+    rustc_dec2flt(target=target)
     # Set up mailbox once for all tests
     MAILBOX = multiprocessing.Queue()
     mailman = threading.Thread(target=write_errors)
@@ -231,7 +244,7 @@ def main():
     for test in tests:
         if whitelist and test not in whitelist:
             continue
-        run(test)
+        run(test, target=target)
     MAILBOX.put(None)
     mailman.join()
 
