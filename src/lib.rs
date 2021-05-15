@@ -31,6 +31,8 @@
 //! assert_eq!(&s[n..], "foo");
 //! ```
 
+#![feature(llvm_asm)]
+
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 #![allow(
     clippy::cast_possible_truncation,
@@ -50,6 +52,7 @@ mod binary;
 mod common;
 mod decimal;
 mod float;
+mod fpu;
 mod number;
 mod parse;
 mod simple;
