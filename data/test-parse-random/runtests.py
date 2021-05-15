@@ -170,12 +170,12 @@ def run(test, target=None):
 
     t0 = time.perf_counter()
     msg("setting up supervisor")
-    args = ['--bin', test, '--features=comprehensive_float_test']
+    args = ['--bin', test, '--features=comprehensive_float_test', '--release']
     if target is None:
         exe = ['cargo', 'run'] + args
     else:
         exe = ['cross', 'run'] + args + ['--target', target]
-    proc = Popen(exe, bufsize=1<<20 , stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    proc = Popen(exe, bufsize=1<<20, stdin=PIPE, stdout=PIPE)
     done = multiprocessing.Value(ctypes.c_bool)
     queue = multiprocessing.Queue(maxsize=5)#(maxsize=1024)
     workers = []
@@ -277,13 +277,16 @@ def is_done():
 def do_work(queue):
     while True:
         try:
-            line = queue.get(timeout=0.01)
+            line = queue.get(timeout=1.0)
         except Queue.Empty:
             if queue.empty() and is_done():
                 return
             else:
                 continue
-        bin64, bin32, text = line.rstrip().split()
+        try:
+            bin64, bin32, text = line.rstrip().split()
+        except:
+            send_error_to_supervisor("Warning: " + line.decode('utf-8'))
         validate(bin64, bin32, text.decode('utf-8'))
 
 
