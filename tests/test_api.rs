@@ -1,4 +1,4 @@
-use fast_float::{parse, parse_partial, FastFloat};
+use fast_float2::{parse, parse_partial, FastFloat};
 
 macro_rules! check_ok {
     ($s:expr, $x:expr) => {

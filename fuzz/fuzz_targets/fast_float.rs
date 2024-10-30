@@ -11,6 +11,6 @@ fn black_box<T>(dummy: T) -> T {
 }
 
 fuzz_target!(|data: &[u8]| {
-    let _ = black_box(::fast_float::parse::<f32, _>(data));
-    let _ = black_box(::fast_float::parse::<f64, _>(data));
+    let _ = black_box(::fast_float2::parse::<f32, _>(data));
+    let _ = black_box(::fast_float2::parse::<f64, _>(data));
 });

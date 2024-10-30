@@ -1,4 +1,4 @@
-This crate provides a utility for benchmarking the `fast-float` crate against
+This crate provides a utility for benchmarking the `fast-float2` crate against
 `lexical_core` and standard library's `FromStr`.
 
 To run a file-based test:
@@ -18,8 +18,8 @@ To run a randomized test:
 cargo run --release -- random uniform
 ```
 
-For more details and options (choosing a different random generator, storing 
-randomized inputs to a file, changing the number of runs, or switching between 
+For more details and options (choosing a different random generator, storing
+randomized inputs to a file, changing the number of runs, or switching between
 32-bit and 64-bit floats), refer to help:
 
 ```

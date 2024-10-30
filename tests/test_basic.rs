@@ -24,7 +24,7 @@ macro_rules! check {
         let string = String::from($s);
         let s = string.as_bytes();
         let expected: $ty = $e;
-        let result = fast_float::parse::<$ty, _>(s).unwrap();
+        let result = fast_float2::parse::<$ty, _>(s).unwrap();
         assert_eq!(result, expected);
         let lex = lexical_core::parse::<$ty>(s).unwrap();
         assert_eq!(result, lex);
@@ -411,7 +411,7 @@ fn test_f64_pow10() {
     for i in -308..=308 {
         let s = format!("1e{}", i);
         let v = f64::from_str(&s).unwrap();
-        assert_eq!(fast_float::parse::<f64, _>(s).unwrap(), v);
+        assert_eq!(fast_float2::parse::<f64, _>(s).unwrap(), v);
     }
 }
 
@@ -420,6 +420,6 @@ fn test_f32_pow10() {
     for i in -38..=38 {
         let s = format!("1e{}", i);
         let v = f32::from_str(&s).unwrap();
-        assert_eq!(fast_float::parse::<f32, _>(s).unwrap(), v);
+        assert_eq!(fast_float2::parse::<f32, _>(s).unwrap(), v);
     }
 }

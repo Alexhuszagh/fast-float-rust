@@ -5,7 +5,7 @@ use libfuzzer_sys::fuzz_target;
 // is small enough that we can test it exhaustively
 
 fn check_roundtrip(float: f64, string: impl AsRef<str>) {
-    let result = ::fast_float::parse::<f64, _>(string.as_ref()).unwrap();
+    let result = ::fast_float2::parse::<f64, _>(string.as_ref()).unwrap();
     if float.is_nan() {
         assert!(result.is_nan());
     } else {

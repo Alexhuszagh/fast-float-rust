@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust: [1.37.0, stable, nightly]
+        rust: [1.56.0, stable, nightly]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -22,6 +22,23 @@ jobs:
       - run: cargo check
       - run: cargo test
       - run: cd extras/data-tests && cargo run --release
+
+  msrv:
+    name: Rust ${{matrix.rust}}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [1.37.0]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{matrix.rust}}
+      - run: cargo check
+      - run: cargo build
 
   cross:
     name: Rust ${{matrix.target}}
