@@ -8,4 +8,4 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
-fast-float = { path = "../.." }
+fast-float2 = { path = "../.." }

@@ -1,9 +1,9 @@
-fast-float
-==========
+fast-float2
+===========
 
-[![Build](https://github.com/aldanor/fast-float-rust/workflows/CI/badge.svg)](https://github.com/aldanor/fast-float-rust/actions?query=branch%3Amaster)
-[![Latest Version](https://img.shields.io/crates/v/fast-float.svg)](https://crates.io/crates/fast-float)
-[![Documentation](https://docs.rs/fast-float/badge.svg)](https://docs.rs/fast-float)
+[![Build](https://github.com/Alexhuszagh/fast-float-rust/workflows/CI/badge.svg)](https://github.com/Alexhuszagh/fast-float-rust/actions?query=branch%3Amaster)
+[![Latest Version](https://img.shields.io/crates/v/fast-float2.svg)](https://crates.io/crates/fast-float2)
+[![Documentation](https://docs.rs/fast-float2/badge.svg)](https://docs.rs/fast-float2)
 [![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Rustc 1.37+](https://img.shields.io/badge/rustc-1.37+-lightgray.svg)](https://blog.rust-lang.org/2019/08/15/Rust-1.37.0.html)
@@ -12,7 +12,7 @@ This crate provides a super-fast decimal number parser from strings into floats.
 
 ```toml
 [dependencies]
-fast-float = "0.2"
+fast-float2 = "0.2.1"
 ```
 
 There are no dependencies and the crate can be used in a no_std context by disabling the "std" feature.
@@ -21,10 +21,10 @@ There are no dependencies and the crate can be used in a no_std context by disab
 
 ## Usage
 
-There's two top-level functions provided: 
-[`parse()`](https://docs.rs/fast-float/latest/fast_float/fn.parse.html) and 
+There's two top-level functions provided:
+[`parse()`](https://docs.rs/fast-float/latest/fast_float/fn.parse.html) and
 [`parse_partial()`](https://docs.rs/fast-float/latest/fast_float/fn.parse_partial.html), both taking
-either a string or a bytes slice and parsing the input into either `f32` or `f64`: 
+either a string or a bytes slice and parsing the input into either `f32` or `f64`:
 
 - `parse()` treats the whole string as a decimal number and returns an error if there are
   invalid characters or if the string is empty.
@@ -39,12 +39,12 @@ Example:
 ```rust
 // Parse the entire string as a decimal number.
 let s = "1.23e-02";
-let x: f32 = fast_float::parse(s).unwrap();
+let x: f32 = fast_float2::parse(s).unwrap();
 assert_eq!(x, 0.0123);
 
 // Parse as many characters as possible as a decimal number.
 let s = "1.23e-02foo";
-let (x, n) = fast_float::parse_partial::<f32, _>(s).unwrap();
+let (x, n) = fast_float2::parse_partial::<f32, _>(s).unwrap();
 assert_eq!(x, 0.0123);
 assert_eq!(n, 8);
 assert_eq!(&s[n..], "foo");
@@ -53,18 +53,21 @@ assert_eq!(&s[n..], "foo");
 ## Details
 
 This crate is a direct port of Daniel Lemire's [`fast_float`](https://github.com/fastfloat/fast_float)
-C++ library (valuable discussions with Daniel while porting it helped shape the crate and get it to 
+C++ library (valuable discussions with Daniel while porting it helped shape the crate and get it to
 the performance level it's at now), with some Rust-specific tweaks. Please see the original
 repository for many useful details regarding the algorithm and the implementation.
 
-The parser is locale-independent. The resulting value is the closest floating-point values (using either 
-`f32` or `f64`), using the "round to even" convention for values that would otherwise fall right in-between 
-two values. That is, we provide exact parsing according to the IEEE standard. 
+The parser is locale-independent. The resulting value is the closest floating-point values (using either
+`f32` or `f64`), using the "round to even" convention for values that would otherwise fall right in-between
+two values. That is, we provide exact parsing according to the IEEE standard.
 
 Infinity and NaN values can be parsed, along with scientific notation.
 
 Both little-endian and big-endian platforms are equally supported, with extra optimizations enabled
 on little-endian architectures.
+
+Since [fast-float-rust](https://github.com/aldanor/fast-float-rust) is unmaintained, this is a fork
+containing the patches and security updates.
 
 ## Testing
 
@@ -80,7 +83,7 @@ There are a few ways this crate is tested:
 ## Performance
 
 The presented parser seems to beat all of the existing C/C++/Rust float parsers known to us at the
-moment by a large margin, in all of the datasets we tested it on so far – see detailed benchmarks 
+moment by a large margin, in all of the datasets we tested it on so far – see detailed benchmarks
 below (the only exception being the original fast_float C++ library, of course – performance of
 which is within noise bounds of this crate). On modern machines like Apple M1, parsing throughput
 can reach up to 1.5 GB/s.
@@ -103,7 +106,7 @@ C++ library, here are few brief notes:
 
 ## Benchmarks
 
-Below are tables of best timings in nanoseconds for parsing a single number 
+Below are tables of best timings in nanoseconds for parsing a single number
 into a 64-bit float.
 
 #### Intel i7-4771
@@ -169,12 +172,12 @@ AMD Rome, Linux, Rust 1.49.
 
 #### Notes
 
-- The two test files referred above can be found in 
+- The two test files referred above can be found in
 [this](https://github.com/lemire/simple_fastfloat_benchmark) repository.
 - The Rust part of the table (along with a few other benchmarks) can be generated via
   the benchmark tool that can be found under `extras/simple-bench` of this repo.
 - The C/C++ part of the table (along with a few other benchmarks and parsers) can be
-  generated via a C++ utility that can be found in 
+  generated via a C++ utility that can be found in
   [this](https://github.com/lemire/simple_fastfloat_benchmark) repository.
 
 <br>

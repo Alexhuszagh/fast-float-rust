@@ -10,7 +10,7 @@ use fastrand::Rng;
 use lexical::FromLexical;
 use structopt::StructOpt;
 
-use fast_float::FastFloat;
+use fast_float2::FastFloat;
 
 use random::RandomGen;
 
@@ -138,7 +138,7 @@ impl Method {
         let data = &input.data;
         let times = match self {
             Self::FastFloat => run_bench(data, repeat, |s: &str| {
-                fast_float::parse_partial::<T, _>(s).unwrap_or_default().0
+                fast_float2::parse_partial::<T, _>(s).unwrap_or_default().0
             }),
             Self::Lexical => run_bench(data, repeat, |s: &str| {
                 lexical_core::parse_partial::<T>(s.as_bytes())
