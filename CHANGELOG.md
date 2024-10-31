@@ -1,5 +1,6 @@
 ## Unreleased
 
+- Fix `no_std` support.
 - Remove most uses of unsafe.
 - Remove non-local safety invariants to prevent unsoundness.
 
