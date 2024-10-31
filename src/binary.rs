@@ -82,7 +82,12 @@ fn compute_product_approx(q: i64, w: u64, precision: usize) -> (u64, u64) {
         0xFFFF_FFFF_FFFF_FFFF_u64
     };
     let index = (q - SMALLEST_POWER_OF_FIVE as i64) as usize;
-    let (lo5, hi5) = unsafe { *POWER_OF_FIVE_128.get_unchecked(index) };
+    // NOTE: this cannot be ellided by the compiler, but the proof the index
+    // must be within the bounds is non-trivial, especially because this
+    // comes from a parsed result. Since this is unlikely to have any major
+    // performance implications, as is determined empirically, we keep the
+    // bounds check despite the performance hit.
+    let (lo5, hi5) = POWER_OF_FIVE_128[index];
     let (mut first_lo, mut first_hi) = full_multiplication(w, lo5);
     if first_hi & mask == mask {
         let (_, second_hi) = full_multiplication(w, hi5);
