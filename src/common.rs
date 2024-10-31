@@ -18,8 +18,8 @@ impl<'a> AsciiStr<'a> {
         }
     }
 
-    pub fn len(&self) -> usize {
-        self.end as usize - self.ptr as usize
+    pub fn len(&self) -> isize {
+        self.end as isize - self.ptr as isize
     }
 
     /// # Safety
@@ -28,7 +28,7 @@ impl<'a> AsciiStr<'a> {
     #[inline]
     pub unsafe fn step_by(&mut self, n: usize) -> &mut Self {
         debug_assert!(
-            n <= self.len(),
+            n < isize::MAX as usize && n as isize <= self.len(),
             "buffer overflow: stepping by greater than our buffer length."
         );
         // SAFETY: Safe if `n <= self.len()`
