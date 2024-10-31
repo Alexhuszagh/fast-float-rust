@@ -108,6 +108,7 @@ fn run_bench<T: FastFloat, F: Fn(&str) -> T>(
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Method {
     FastFloat,
+    FastFloat2,
     Lexical,
     FromStr,
 }
@@ -123,13 +124,14 @@ fn type_str(float32: bool) -> &'static str {
 impl Method {
     pub fn name(&self) -> &'static str {
         match self {
+            Self::FastFloat2 => "fast-float2",
             Self::FastFloat => "fast-float",
             Self::Lexical => "lexical",
             Self::FromStr => "from_str",
         }
     }
 
-    fn run_as<T: FastFloat + FromLexical + FromStr>(
+    fn run_as<T: FastFloat + fast_float::FastFloat + FromLexical + FromStr>(
         &self,
         input: &Input,
         repeat: usize,
@@ -137,8 +139,11 @@ impl Method {
     ) -> BenchResult {
         let data = &input.data;
         let times = match self {
-            Self::FastFloat => run_bench(data, repeat, |s: &str| {
+            Self::FastFloat2 => run_bench(data, repeat, |s: &str| {
                 fast_float2::parse_partial::<T, _>(s).unwrap_or_default().0
+            }),
+            Self::FastFloat => run_bench(data, repeat, |s: &str| {
+                fast_float::parse_partial::<T, _>(s).unwrap_or_default().0
             }),
             Self::Lexical => run_bench(data, repeat, |s: &str| {
                 lexical_core::parse_partial::<T>(s.as_bytes())
@@ -165,7 +170,7 @@ impl Method {
     }
 
     pub fn all() -> &'static [Self] {
-        &[Method::FastFloat, Method::Lexical, Method::FromStr]
+        &[Method::FastFloat2, Method::FastFloat, Method::Lexical, Method::FromStr]
     }
 }
 
@@ -279,7 +284,7 @@ fn main() {
     let methods = if !opt.only_fast_float && !matches!(&opt.command, &Cmd::All {..}) {
         Method::all().into()
     } else {
-        vec![Method::FastFloat]
+        vec![Method::FastFloat2]
     };
 
     let inputs = match opt.command {
