@@ -35,6 +35,7 @@
 //! assert_eq!(&s[n..], "foo");
 //! ```
 
+#![cfg_attr(not(feature = "std"), no_std)]
 #![allow(unused_unsafe)]
 #![warn(unsafe_op_in_unsafe_fn)]
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
