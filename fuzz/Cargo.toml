@@ -12,8 +12,8 @@ cargo-fuzz = true
 members = ["."]
 
 [dependencies]
-fast-float = { path = ".." }
-libfuzzer-sys = "0.3"
+fast-float2 = { path = ".." }
+libfuzzer-sys = "0.4.7"
 ryu = "1.0"
 
 [[bin]]
