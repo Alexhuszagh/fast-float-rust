@@ -87,7 +87,7 @@ impl Decimal {
         if dp < self.num_digits {
             round_up = self.digits[dp] >= 5;
             if self.digits[dp] == 5 && dp + 1 == self.num_digits {
-                round_up = self.truncated || ((dp != 0) && (1 & self.digits[dp - 1] != 0))
+                round_up = self.truncated || ((dp != 0) && (1 & self.digits[dp - 1] != 0));
             }
         }
         if round_up {
@@ -267,6 +267,7 @@ pub fn parse_decimal(mut s: &[u8]) -> Decimal {
 }
 
 #[inline]
+#[allow(clippy::redundant_else)]
 fn number_of_digits_decimal_left_shift(d: &Decimal, mut shift: usize) -> usize {
     const TABLE: [u16; 65] = [
         0x0000, 0x0800, 0x0801, 0x0803, 0x1006, 0x1009, 0x100D, 0x1812, 0x1817, 0x181D, 0x2024,
@@ -326,7 +327,7 @@ fn number_of_digits_decimal_left_shift(d: &Decimal, mut shift: usize) -> usize {
     shift &= 63;
     let x_a = TABLE[shift];
     let x_b = TABLE[shift + 1];
-    let num_new_digits = (x_a >> 11) as _;
+    let num_new_digits = (x_a >> 11) as usize;
     let pow5_a = (0x7FF & x_a) as usize;
     let pow5_b = (0x7FF & x_b) as usize;
     let pow5 = &TABLE_POW5[pow5_a..];

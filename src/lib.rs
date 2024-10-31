@@ -12,13 +12,12 @@
 //!   returns an error if there are invalid characters or if the string is
 //!   empty.
 //! - [`parse_partial`](crate::parse_partial()) tries to find the longest
-//!   substring at the
-//! beginning of the given input string that can be parsed as a decimal number
-//! and, in the case of success, returns the parsed value along the number of
-//! characters processed; an error is returned if the string doesn't start with
-//! a decimal number or if it is empty. This function is most useful as a
-//! building block when constructing more complex parsers, or when parsing
-//! streams of data.
+//!   substring at the beginning of the given input string that can be parsed as
+//!   a decimal number and, in the case of success, returns the parsed value
+//!   along the number of characters processed; an error is returned if the
+//!   string doesn't start with a decimal number or if it is empty. This
+//!   function is most useful as a building block when constructing more complex
+//!   parsers, or when parsing streams of data.
 //!
 //! ## Examples
 //!
@@ -36,7 +35,17 @@
 //! assert_eq!(&s[n..], "foo");
 //! ```
 
+#![allow(unused_unsafe)]
+#![warn(unsafe_op_in_unsafe_fn)]
 #![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
+#![deny(
+    clippy::doc_markdown,
+    clippy::unnecessary_safety_comment,
+    clippy::semicolon_if_nothing_returned,
+    clippy::unwrap_used,
+    clippy::as_underscore,
+    clippy::doc_markdown
+)]
 #![allow(
     clippy::cast_possible_truncation,
     clippy::cast_possible_wrap,
@@ -46,7 +55,8 @@
     clippy::missing_const_for_fn,
     clippy::use_self,
     clippy::module_name_repetitions,
-    clippy::cargo_common_metadata
+    clippy::cargo_common_metadata,
+    clippy::struct_field_names
 )]
 
 use core::fmt::{self, Display};

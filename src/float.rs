@@ -68,12 +68,12 @@ impl Float for f32 {
 
     #[inline]
     fn from_u64(v: u64) -> Self {
-        v as _
+        v as f32
     }
 
     #[inline]
     fn from_u64_bits(v: u64) -> Self {
-        f32::from_bits((v & 0xFFFFFFFF) as u32)
+        f32::from_bits((v & 0xFFFF_FFFF) as u32)
     }
 
     #[inline]
@@ -108,7 +108,7 @@ impl Float for f64 {
 
     #[inline]
     fn from_u64(v: u64) -> Self {
-        v as _
+        v as f64
     }
 
     #[inline]

@@ -17,7 +17,7 @@ pub fn compute_float<F: Float>(q: i64, mut w: u64) -> AdjustedMantissa {
     w <<= lz;
     let (lo, hi) = compute_product_approx(q, w, F::MANTISSA_EXPLICIT_BITS + 3);
     if lo == 0xFFFF_FFFF_FFFF_FFFF {
-        let inside_safe_exponent = (q >= -27) && (q <= 55);
+        let inside_safe_exponent = (-27..=55).contains(&q);
         if !inside_safe_exponent {
             return am_error;
         }

@@ -3,6 +3,7 @@ use crate::float::Float;
 
 const MIN_19DIGIT_INT: u64 = 100_0000_0000_0000_0000;
 
+#[allow(clippy::unreadable_literal)]
 pub const INT_POW10: [u64; 16] = [
     1,
     10,
@@ -46,9 +47,9 @@ impl Number {
                 // normal fast path
                 let value = F::from_u64(self.mantissa);
                 if self.exponent < 0 {
-                    value / F::pow10_fast_path((-self.exponent) as _)
+                    value / F::pow10_fast_path((-self.exponent) as usize)
                 } else {
-                    value * F::pow10_fast_path(self.exponent as _)
+                    value * F::pow10_fast_path(self.exponent as usize)
                 }
             } else {
                 // disguised fast path
@@ -57,7 +58,7 @@ impl Number {
                 if mantissa > F::MAX_MANTISSA_FAST_PATH {
                     return None;
                 }
-                F::from_u64(mantissa) * F::pow10_fast_path(F::MAX_EXPONENT_FAST_PATH as _)
+                F::from_u64(mantissa) * F::pow10_fast_path(F::MAX_EXPONENT_FAST_PATH as usize)
             };
             if self.negative {
                 value = -value;
@@ -201,7 +202,7 @@ pub fn parse_number(s: &[u8]) -> Option<(Number, usize)> {
     let exp_number = parse_scientific(&mut s);
     exponent += exp_number;
 
-    let len = s.offset_from(&start) as _;
+    let len = s.offset_from(&start) as usize;
 
     // handle uncommon case with many digits
     if n_digits <= 19 {

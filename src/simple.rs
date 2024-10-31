@@ -45,7 +45,7 @@ pub fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
                 _ => 1,
             }
         } else {
-            get_shift((-d.decimal_point) as _)
+            get_shift((-d.decimal_point) as usize)
         };
         d.left_shift(shift);
         if d.decimal_point > Decimal::DECIMAL_POINT_RANGE {
