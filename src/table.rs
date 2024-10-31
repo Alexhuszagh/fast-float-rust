@@ -41,6 +41,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)]
     fn test_pow5_table() {
         for q in SMALLEST_POWER_OF_FIVE..=LARGEST_POWER_OF_FIVE {
             let (hi, lo) = compute_pow5_128(q);
