@@ -1,4 +1,4 @@
-## Unreleased
+## 0.2.2
 
 - Fix `no_std` support.
 - Remove most uses of unsafe.
