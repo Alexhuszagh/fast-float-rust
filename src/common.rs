@@ -28,7 +28,8 @@ impl<'a> AsciiStr<'a> {
     #[inline]
     pub unsafe fn step_by(&mut self, n: usize) -> &mut Self {
         debug_assert!(
-            n < isize::MAX as usize && n as isize <= self.len(),
+            // FIXME: remove when we drop support for < 1.43.0
+            n < isize::max_value() as usize && n as isize <= self.len(),
             "buffer overflow: stepping by greater than our buffer length."
         );
         // SAFETY: Safe if `n <= self.len()`
