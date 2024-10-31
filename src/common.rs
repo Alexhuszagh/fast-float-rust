@@ -18,15 +18,39 @@ impl<'a> AsciiStr<'a> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.end as usize - self.ptr as usize
+    }
+
+    /// # Safety
+    ///
+    /// Safe if `n <= self.len()`
     #[inline]
-    pub fn step_by(&mut self, n: usize) -> &mut Self {
+    pub unsafe fn step_by(&mut self, n: usize) -> &mut Self {
+        debug_assert!(n <= self.len(), "buffer overflow: stepping by greater than our buffer length.");
+        // SAFETY: Safe if `n <= self.len()`
         unsafe { self.ptr = self.ptr.add(n) };
         self
     }
 
+    /// # Safety
+    ///
+    /// Safe if `!self.is_empty()`
     #[inline]
-    pub fn step(&mut self) -> &mut Self {
-        self.step_by(1)
+    pub unsafe fn step(&mut self) -> &mut Self {
+        debug_assert!(!self.is_empty(), "buffer overflow: buffer is empty.");
+        // SAFETY: Safe if the buffer is not empty, that is, `self.len() >= 1`
+        unsafe { self.step_by(1) }
+    }
+
+    #[inline]
+    pub fn step_if(&mut self, c: u8) -> bool {
+        let stepped = self.first_is(c);
+        if stepped {
+            // SAFETY: safe since we have at least 1 character in the buffer
+            unsafe { self.step() };
+        }
+        stepped
     }
 
     #[inline]
@@ -34,100 +58,124 @@ impl<'a> AsciiStr<'a> {
         self.ptr == self.end
     }
 
+    /// # Safety
+    ///
+    /// Safe if `!self.is_empty()`
     #[inline]
-    pub fn first(&self) -> u8 {
+    pub unsafe fn first_unchecked(&self) -> u8 {
+        debug_assert!(!self.is_empty(), "attempting to get first value of empty buffer.");
         unsafe { *self.ptr }
     }
 
     #[inline]
-    pub fn first_is(&self, c: u8) -> bool {
-        self.first() == c
-    }
-
-    #[inline]
-    pub fn first_either(&self, c1: u8, c2: u8) -> bool {
-        let c = self.first();
-        c == c1 || c == c2
-    }
-
-    #[inline]
-    pub fn check_first(&self, c: u8) -> bool {
-        !self.is_empty() && self.first() == c
-    }
-
-    #[inline]
-    pub fn check_first_either(&self, c1: u8, c2: u8) -> bool {
-        !self.is_empty() && (self.first() == c1 || self.first() == c2)
-    }
-
-    #[inline]
-    pub fn check_first_digit(&self) -> bool {
-        !self.is_empty() && self.first().is_ascii_digit()
-    }
-
-    #[inline]
-    pub fn parse_digits(&mut self, mut func: impl FnMut(u8)) {
-        while !self.is_empty() && self.first().is_ascii_digit() {
-            func(self.first() - b'0');
-            self.step();
-        }
-    }
-
-    #[inline]
-    pub fn check_len(&self, n: usize) -> bool {
-        let len = self.end as usize - self.ptr as usize;
-        n <= len
-    }
-
-    #[inline]
-    pub fn try_read_u64(&self) -> Option<u64> {
-        if self.check_len(8) {
-            Some(self.read_u64())
+    pub fn first(&self) -> Option<u8> {
+        if !self.is_empty() {
+            // SAFETY: safe since `!self.is_empty()`
+            Some(unsafe { self.first_unchecked() })
         } else {
             None
         }
     }
 
     #[inline]
-    pub fn read_u64(&self) -> u64 {
-        debug_assert!(self.check_len(8));
+    pub fn first_is(&self, c: u8) -> bool {
+        self.first() == Some(c)
+    }
+
+    #[inline]
+    pub fn first_is2(&self, c1: u8, c2: u8) -> bool {
+        if let Some(c) = self.first() {
+            c == c1 || c == c2
+        } else {
+            false
+        }
+    }
+
+    #[inline]
+    pub fn first_is_digit(&self) -> bool {
+        if let Some(c) = self.first() {
+            c.is_ascii_digit()
+        } else {
+            false
+        }
+    }
+
+    #[inline]
+    pub fn first_digit(&self) -> Option<u8> {
+        self.first().and_then(|x| if x.is_ascii_digit() {
+            Some(x - b'0')
+        } else {
+            None
+        })
+    }
+
+    #[inline]
+    pub fn try_read_digit(&mut self) -> Option<u8> {
+        if let Some(digit) = self.first_digit() {
+            // SAFETY: Safe since `first_digit` means the buffer is not empty
+            unsafe { self.step() };
+            Some(digit)
+        } else {
+            None
+        }
+    }
+
+    #[inline]
+    pub fn parse_digits(&mut self, mut func: impl FnMut(u8)) {
+        while let Some(digit) = self.try_read_digit() {
+            func(digit);
+        }
+    }
+
+    #[inline]
+    pub fn try_read_u64(&self) -> Option<u64> {
+        if self.len() >= 8 {
+            Some(unsafe { self.read_u64_unchecked() })
+        } else {
+            None
+        }
+    }
+
+    /// # Safety
+    ///
+    /// Safe if `self.len() >= 8`
+    #[inline]
+    pub unsafe fn read_u64_unchecked(&self) -> u64 {
+        debug_assert!(self.len() >= 8, "overflowing buffer: buffer is not 8 bytes long");
         let src = self.ptr as *const u64;
+        // SAFETY: Safe if `self.len() >= 8`
         u64::from_le(unsafe { ptr::read_unaligned(src) })
     }
 
     #[inline]
     pub fn offset_from(&self, other: &Self) -> isize {
-        isize::wrapping_sub(self.ptr as _, other.ptr as _) // assuming the same end
+        isize::wrapping_sub(self.ptr as isize, other.ptr as isize) // assuming the same end
     }
 }
 
 // Most of these are inherently unsafe; we assume we know what we're calling and when.
 pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     #[inline]
-    fn get_at(&self, i: usize) -> u8 {
-        unsafe { *self.as_ref().get_unchecked(i) }
-    }
-
-    #[inline]
-    fn get_first(&self) -> u8 {
-        debug_assert!(!self.as_ref().is_empty());
-        self.get_at(0)
-    }
-
-    #[inline]
     fn check_first(&self, c: u8) -> bool {
-        !self.as_ref().is_empty() && self.get_first() == c
+        self.as_ref().first() == Some(&c)
     }
 
     #[inline]
     fn check_first2(&self, c1: u8, c2: u8) -> bool {
-        !self.as_ref().is_empty() && (self.get_first() == c1 || self.get_first() == c2)
+        if let Some(&c) = self.as_ref().first() {
+            c == c1 || c == c2
+        } else {
+            false
+        }
     }
 
     #[inline]
     fn eq_ignore_case(&self, u: &[u8]) -> bool {
-        debug_assert!(self.as_ref().len() >= u.len());
-        let d = (0..u.len()).fold(0, |d, i| d | self.get_at(i) ^ u.get_at(i));
+        let s = self.as_ref();
+        if s.len() < u.len() {
+            return false;
+        }
+        let d = (0..u.len()).fold(0, |d, i| d | s[i] ^ u[i]);
         d == 0 || d == 32
     }
 
@@ -145,26 +193,25 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
         s
     }
 
+    /// # Safety
+    ///
+    /// Safe if `self.len() >= 8`.
     #[inline]
-    fn skip_chars2(&self, c1: u8, c2: u8) -> &[u8] {
-        let mut s = self.as_ref();
-        while !s.is_empty() && (s.get_first() == c1 || s.get_first() == c2) {
-            s = s.advance(1);
-        }
-        s
-    }
-
-    #[inline]
-    fn read_u64(&self) -> u64 {
+    unsafe fn read_u64(&self) -> u64 {
         debug_assert!(self.as_ref().len() >= 8);
         let src = self.as_ref().as_ptr() as *const u64;
+        // SAFETY: safe if `self.len() >= 8`.
         u64::from_le(unsafe { ptr::read_unaligned(src) })
     }
 
+    /// # Safety
+    ///
+    /// Safe if `self.len() >= 8`.
     #[inline]
-    fn write_u64(&mut self, value: u64) {
+    unsafe fn write_u64(&mut self, value: u64) {
         debug_assert!(self.as_ref().len() >= 8);
         let dst = self.as_mut().as_mut_ptr() as *mut u64;
+        // SAFETY: safe if `self.len() >= 8`.
         unsafe { ptr::write_unaligned(dst, u64::to_le(value)) };
     }
 }
@@ -180,8 +227,8 @@ pub fn is_8digits(v: u64) -> bool {
 
 #[inline]
 pub fn parse_digits(s: &mut &[u8], mut f: impl FnMut(u8)) {
-    while !s.is_empty() {
-        let c = s.get_first().wrapping_sub(b'0');
+    while let Some(&ch) = s.first() {
+        let c = ch.wrapping_sub(b'0');
         if c < 10 {
             f(c);
             *s = s.advance(1);
@@ -215,14 +262,14 @@ mod tests {
     fn test_read_write_u64() {
         let bytes = b"01234567";
         let string = AsciiStr::new(bytes);
-        let int = string.read_u64();
-        assert_eq!(int, 0x3736353433323130);
+        let int = string.try_read_u64();
+        assert_eq!(int, Some(0x3736353433323130));
 
-        let int = bytes.read_u64();
+        let int = unsafe { bytes.read_u64() };
         assert_eq!(int, 0x3736353433323130);
 
         let mut slc = [0u8; 8];
-        slc.write_u64(0x3736353433323130);
+        unsafe { slc.write_u64(0x3736353433323130) };
         assert_eq!(&slc, bytes);
     }
 }

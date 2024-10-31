@@ -5,10 +5,6 @@ use crate::simple::parse_long_mantissa;
 
 #[inline]
 pub fn parse_float<F: Float>(s: &[u8]) -> Option<(F, usize)> {
-    if s.is_empty() {
-        return None;
-    }
-
     let (num, rest) = match parse_number(s) {
         Some(r) => r,
         None => return parse_inf_nan(s),
