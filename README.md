@@ -19,6 +19,8 @@ There are no dependencies and the crate can be used in a no_std context by disab
 
 *Compiler support: rustc 1.37+.*
 
+This crate is in maintenance mode for bug fixes (especially security patches): minimal feature enhancements will be accepted. This implementation has been adopted by the Rust standard library: if you do not need parsing directly from bytes and/or partial parsers, you should use [FromStr](https://doc.rust-lang.org/std/str/trait.FromStr.html) for [f32](https://doc.rust-lang.org/std/primitive.f32.html) or [f64](https://doc.rust-lang.org/std/primitive.f64.html) instead.
+
 ## Usage
 
 There's two top-level functions provided:
