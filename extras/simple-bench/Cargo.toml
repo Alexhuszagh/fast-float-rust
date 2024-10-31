@@ -11,7 +11,7 @@ publish = false
 fast-float2 = { path = "../.." }
 structopt = "0.3"
 anyhow = "1.0"
-lexical = "5.2"
-lexical-core = "0.7"
-fastrand = "1.4"
+lexical = "7.0.2"
+lexical-core = "1.0.2"
+fastrand = "2.1.1"
 fast-float = "0.2"

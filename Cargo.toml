@@ -20,11 +20,11 @@ default = ["std"]
 std = []
 
 [dev-dependencies]
-lexical-core = "0.7"
-hexf-parse = "0.1"
+lexical-core = "1.0.2"
+hexf-parse = "0.2.1"
 ryu = "1.0"
-fastrand = "1.4"
-num-bigint = "0.3"
+fastrand = "2.1.1"
+num-bigint = "0.4.6"
 
 [workspace]
 members = [".", "extras/data-tests", "extras/simple-bench"]
