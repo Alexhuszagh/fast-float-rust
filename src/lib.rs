@@ -82,7 +82,7 @@ impl Display for Error {
 
 #[cfg(feature = "std")]
 impl std::error::Error for Error {
-    fn description(&self) -> &str {
+    fn description(&self) -> &'static str {
         "error while parsing a float"
     }
 }
