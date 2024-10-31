@@ -6,9 +6,8 @@ use crate::float::Float;
 pub fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
     const MAX_SHIFT: usize = 60;
     const NUM_POWERS: usize = 19;
-    const POWERS: [u8; 19] = [
-        0, 3, 6, 9, 13, 16, 19, 23, 26, 29, 33, 36, 39, 43, 46, 49, 53, 56, 59,
-    ];
+    const POWERS: [u8; 19] =
+        [0, 3, 6, 9, 13, 16, 19, 23, 26, 29, 33, 36, 39, 43, 46, 49, 53, 56, 59];
 
     let get_shift = |n| {
         if n < NUM_POWERS {
@@ -46,7 +45,7 @@ pub fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
                 _ => 1,
             }
         } else {
-            get_shift((-d.decimal_point) as _)
+            get_shift((-d.decimal_point) as usize)
         };
         d.left_shift(shift);
         if d.decimal_point > Decimal::DECIMAL_POINT_RANGE {
@@ -81,5 +80,8 @@ pub fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
         power2 -= 1;
     }
     mantissa &= (1_u64 << F::MANTISSA_EXPLICIT_BITS) - 1;
-    AdjustedMantissa { mantissa, power2 }
+    AdjustedMantissa {
+        mantissa,
+        power2,
+    }
 }

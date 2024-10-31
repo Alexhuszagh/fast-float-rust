@@ -17,7 +17,7 @@ pub fn compute_float<F: Float>(q: i64, mut w: u64) -> AdjustedMantissa {
     w <<= lz;
     let (lo, hi) = compute_product_approx(q, w, F::MANTISSA_EXPLICIT_BITS + 3);
     if lo == 0xFFFF_FFFF_FFFF_FFFF {
-        let inside_safe_exponent = (q >= -27) && (q <= 55);
+        let inside_safe_exponent = (-27..=55).contains(&q);
         if !inside_safe_exponent {
             return am_error;
         }
@@ -33,7 +33,10 @@ pub fn compute_float<F: Float>(q: i64, mut w: u64) -> AdjustedMantissa {
         mantissa += mantissa & 1;
         mantissa >>= 1;
         power2 = (mantissa >= (1_u64 << F::MANTISSA_EXPLICIT_BITS)) as i32;
-        return AdjustedMantissa { mantissa, power2 };
+        return AdjustedMantissa {
+            mantissa,
+            power2,
+        };
     }
     if lo <= 1
         && q >= F::MIN_EXPONENT_ROUND_TO_EVEN as i64
@@ -53,7 +56,10 @@ pub fn compute_float<F: Float>(q: i64, mut w: u64) -> AdjustedMantissa {
     if power2 >= F::INFINITE_POWER {
         return am_inf;
     }
-    AdjustedMantissa { mantissa, power2 }
+    AdjustedMantissa {
+        mantissa,
+        power2,
+    }
 }
 
 #[inline]
@@ -67,9 +73,10 @@ fn full_multiplication(a: u64, b: u64) -> (u64, u64) {
     (r as u64, (r >> 64) as u64)
 }
 
-// This will compute or rather approximate w * 5**q and return a pair of 64-bit words
-// approximating the result, with the "high" part corresponding to the most significant
-// bits and the low part corresponding to the least significant bits.
+// This will compute or rather approximate w * 5**q and return a pair of 64-bit
+// words approximating the result, with the "high" part corresponding to the
+// most significant bits and the low part corresponding to the least significant
+// bits.
 #[inline]
 fn compute_product_approx(q: i64, w: u64, precision: usize) -> (u64, u64) {
     debug_assert!(q >= SMALLEST_POWER_OF_FIVE as i64);

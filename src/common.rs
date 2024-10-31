@@ -14,7 +14,7 @@ impl<'a> AsciiStr<'a> {
         Self {
             ptr: s.as_ptr(),
             end: unsafe { s.as_ptr().add(s.len()) },
-            _marker: PhantomData::default(),
+            _marker: PhantomData,
         }
     }
 
@@ -27,7 +27,10 @@ impl<'a> AsciiStr<'a> {
     /// Safe if `n <= self.len()`
     #[inline]
     pub unsafe fn step_by(&mut self, n: usize) -> &mut Self {
-        debug_assert!(n <= self.len(), "buffer overflow: stepping by greater than our buffer length.");
+        debug_assert!(
+            n <= self.len(),
+            "buffer overflow: stepping by greater than our buffer length."
+        );
         // SAFETY: Safe if `n <= self.len()`
         unsafe { self.ptr = self.ptr.add(n) };
         self
@@ -69,11 +72,11 @@ impl<'a> AsciiStr<'a> {
 
     #[inline]
     pub fn first(&self) -> Option<u8> {
-        if !self.is_empty() {
+        if self.is_empty() {
+            None
+        } else {
             // SAFETY: safe since `!self.is_empty()`
             Some(unsafe { self.first_unchecked() })
-        } else {
-            None
         }
     }
 
@@ -84,40 +87,31 @@ impl<'a> AsciiStr<'a> {
 
     #[inline]
     pub fn first_is2(&self, c1: u8, c2: u8) -> bool {
-        if let Some(c) = self.first() {
-            c == c1 || c == c2
-        } else {
-            false
-        }
+        self.first().map_or(false, |c| c == c1 || c == c2)
     }
 
     #[inline]
     pub fn first_is_digit(&self) -> bool {
-        if let Some(c) = self.first() {
-            c.is_ascii_digit()
-        } else {
-            false
-        }
+        self.first().map_or(false, |c| c.is_ascii_digit())
     }
 
     #[inline]
     pub fn first_digit(&self) -> Option<u8> {
-        self.first().and_then(|x| if x.is_ascii_digit() {
-            Some(x - b'0')
-        } else {
-            None
+        self.first().and_then(|x| {
+            if x.is_ascii_digit() {
+                Some(x - b'0')
+            } else {
+                None
+            }
         })
     }
 
     #[inline]
     pub fn try_read_digit(&mut self) -> Option<u8> {
-        if let Some(digit) = self.first_digit() {
-            // SAFETY: Safe since `first_digit` means the buffer is not empty
-            unsafe { self.step() };
-            Some(digit)
-        } else {
-            None
-        }
+        let digit = self.first_digit()?;
+        // SAFETY: Safe since `first_digit` means the buffer is not empty
+        unsafe { self.step() };
+        Some(digit)
     }
 
     #[inline]
@@ -140,6 +134,7 @@ impl<'a> AsciiStr<'a> {
     ///
     /// Safe if `self.len() >= 8`
     #[inline]
+    #[allow(clippy::cast_ptr_alignment)]
     pub unsafe fn read_u64_unchecked(&self) -> u64 {
         debug_assert!(self.len() >= 8, "overflowing buffer: buffer is not 8 bytes long");
         let src = self.ptr as *const u64;
@@ -153,7 +148,8 @@ impl<'a> AsciiStr<'a> {
     }
 }
 
-// Most of these are inherently unsafe; we assume we know what we're calling and when.
+// Most of these are inherently unsafe; we assume we know what we're calling and
+// when.
 pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     #[inline]
     fn check_first(&self, c: u8) -> bool {
@@ -197,6 +193,7 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     ///
     /// Safe if `self.len() >= 8`.
     #[inline]
+    #[allow(clippy::cast_ptr_alignment)]
     unsafe fn read_u64(&self) -> u64 {
         debug_assert!(self.as_ref().len() >= 8);
         let src = self.as_ref().as_ptr() as *const u64;
@@ -208,6 +205,7 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     ///
     /// Safe if `self.len() >= 8`.
     #[inline]
+    #[allow(clippy::cast_ptr_alignment)]
     unsafe fn write_u64(&mut self, value: u64) {
         debug_assert!(self.as_ref().len() >= 8);
         let dst = self.as_mut().as_mut_ptr() as *mut u64;
@@ -216,7 +214,8 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     }
 }
 
-impl ByteSlice for [u8] {}
+impl ByteSlice for [u8] {
+}
 
 #[inline]
 pub fn is_8digits(v: u64) -> bool {

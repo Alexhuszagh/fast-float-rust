@@ -31,10 +31,7 @@ impl TestCase {
         let (value, len) = r.unwrap();
         if len != self.string.len() || value != expected {
             if len != self.string.len() {
-                eprintln!(
-                    "Expected empty string remainder, got: {:?}",
-                    self.string.len() - len
-                );
+                eprintln!("Expected empty string remainder, got: {:?}", self.string.len() - len);
             }
             if value != expected {
                 eprintln!("Expected output {}, got {}", expected, value);
@@ -51,10 +48,7 @@ impl TestCase {
 
 fn parse_test_file(filename: impl AsRef<Path>) -> impl Iterator<Item = TestCase> {
     let file = File::open(filename).unwrap();
-    BufReader::new(file)
-        .lines()
-        .map(Result::unwrap)
-        .map(TestCase::parse)
+    BufReader::new(file).lines().map(Result::unwrap).map(TestCase::parse)
 }
 
 fn run_test_cases(filename: impl AsRef<Path>) -> usize {
