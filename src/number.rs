@@ -84,16 +84,18 @@ fn parse_8digits(mut v: u64) -> u64 {
 #[inline]
 fn try_parse_digits(s: &mut AsciiStr<'_>, x: &mut u64) {
     s.parse_digits(|digit| {
-        *x = x.wrapping_mul(10).wrapping_add(digit as _); // overflows to be handled later
+        *x = x.wrapping_mul(10).wrapping_add(digit as u64); // overflows to be handled later
     });
 }
 
 #[inline]
 fn try_parse_19digits(s: &mut AsciiStr<'_>, x: &mut u64) {
-    while *x < MIN_19DIGIT_INT && !s.is_empty() && s.first().is_ascii_digit() {
-        let digit = s.first() - b'0';
-        *x = (*x * 10) + digit as u64; // no overflows here
-        s.step();
+    while *x < MIN_19DIGIT_INT {
+        if let Some(digit) = s.try_read_digit() {
+            *x = (*x * 10) + digit as u64; // no overflows here
+        } else {
+            break;
+        }
     }
 }
 
@@ -105,13 +107,15 @@ fn try_parse_8digits(s: &mut AsciiStr<'_>, x: &mut u64) {
             *x = x
                 .wrapping_mul(1_0000_0000)
                 .wrapping_add(parse_8digits(v));
-            s.step_by(8);
+            // SAFETY: safe since there is at least 8 bytes from `try_read_u64`.
+            unsafe { s.step_by(8) };
             if let Some(v) = s.try_read_u64() {
                 if is_8digits(v) {
                     *x = x
                         .wrapping_mul(1_0000_0000)
                         .wrapping_add(parse_8digits(v));
-                    s.step_by(8);
+                    // SAFETY: safe since there is at least 8 bytes from `try_read_u64`.
+                    unsafe { s.step_by(8) };
                 }
             }
         }
@@ -120,16 +124,22 @@ fn try_parse_8digits(s: &mut AsciiStr<'_>, x: &mut u64) {
 
 #[inline]
 fn parse_scientific(s: &mut AsciiStr<'_>) -> i64 {
+    if !s.first_is2(b'e', b'E') {
+        return 0;
+    }
+
     // the first character is 'e'/'E' and scientific mode is enabled
     let start = *s;
-    s.step();
+    // SAFETY: safe since there is at least 1 character which is `e` or `E`
+    unsafe { s.step() };
     let mut exp_num = 0_i64;
     let mut neg_exp = false;
-    if !s.is_empty() && s.first_either(b'-', b'+') {
+    if s.first_is2(b'-', b'+') {
         neg_exp = s.first_is(b'-');
-        s.step();
+        // SAFETY: safe since there's at least 1 character in the buffer
+        unsafe { s.step() };
     }
-    if s.check_first_digit() {
+    if s.first_is_digit() {
         s.parse_digits(|digit| {
             if exp_num < 0x10000 {
                 exp_num = 10 * exp_num + digit as i64; // no overflows here
@@ -148,22 +158,24 @@ fn parse_scientific(s: &mut AsciiStr<'_>) -> i64 {
 
 #[inline]
 pub fn parse_number(s: &[u8]) -> Option<(Number, usize)> {
-    debug_assert!(!s.is_empty());
+    if s.is_empty() {
+        return None;
+    }
 
     let mut s = AsciiStr::new(s);
     let start = s;
 
     // handle optional +/- sign
     let mut negative = false;
-    if s.first() == b'-' {
+    if s.step_if(b'-') {
         negative = true;
-        if s.step().is_empty() {
+        if s.is_empty() {
             return None;
         }
-    } else if s.first() == b'+' && s.step().is_empty() {
+    } else if s.step_if(b'+') && s.is_empty() {
         return None;
     }
-    debug_assert!(!s.is_empty());
+    debug_assert!(!s.is_empty(), "should not have empty buffer after sign checks");
 
     // parse initial digits before dot
     let mut mantissa = 0_u64;
@@ -175,8 +187,7 @@ pub fn parse_number(s: &[u8]) -> Option<(Number, usize)> {
     let mut n_after_dot = 0;
     let mut exponent = 0_i64;
     let int_end = s;
-    if s.check_first(b'.') {
-        s.step();
+    if s.step_if(b'.') {
         let before = s;
         try_parse_8digits(&mut s, &mut mantissa);
         try_parse_digits(&mut s, &mut mantissa);
@@ -190,11 +201,8 @@ pub fn parse_number(s: &[u8]) -> Option<(Number, usize)> {
     }
 
     // handle scientific format
-    let mut exp_number = 0_i64;
-    if s.check_first_either(b'e', b'E') {
-        exp_number = parse_scientific(&mut s);
-        exponent += exp_number;
-    }
+    let exp_number = parse_scientific(&mut s);
+    exponent += exp_number;
 
     let len = s.offset_from(&start) as _;
 
@@ -214,9 +222,12 @@ pub fn parse_number(s: &[u8]) -> Option<(Number, usize)> {
     n_digits -= 19;
     let mut many_digits = false;
     let mut p = digits_start;
-    while p.check_first_either(b'0', b'.') {
-        n_digits -= p.first().saturating_sub(b'0' - 1) as isize; // '0' = b'.' + 2
-        p.step();
+    while p.first_is2(b'0', b'.') {
+        // SAFETY: safe since there's at least 1 element that is `0` or `.`.
+        let byte = unsafe { p.first_unchecked() };
+        n_digits -= byte.saturating_sub(b'0' - 1) as isize; // '0' = b'.' + 2
+        // SAFETY: safe since there's at least 1 element from the `first_is2` check.
+        unsafe { p.step() };
     }
     if n_digits > 0 {
         // at this point we have more than 19 significant digits, let's try again
@@ -227,7 +238,10 @@ pub fn parse_number(s: &[u8]) -> Option<(Number, usize)> {
         exponent = if mantissa >= MIN_19DIGIT_INT {
             int_end.offset_from(&s) // big int
         } else {
-            s.step(); // fractional component, skip the '.'
+            // SAFETY: safe since `s` is at the digits start, so we have
+            // at least 1 digit from `ndigits > 0`.
+            debug_assert!(s.first_is(b'.'), "first character for the fraction must be a decimal");
+            unsafe { s.step() }; // fractional component, skip the '.'
             let before = s;
             try_parse_19digits(&mut s, &mut mantissa);
             -s.offset_from(&before)
@@ -261,14 +275,14 @@ pub fn parse_inf_nan<F: Float>(s: &[u8]) -> Option<(F, usize)> {
         } else if s.eq_ignore_case(b"inf") {
             return Some((F::INFINITY, parse_inf_rest(s)));
         } else if s.len() >= 4 {
-            if s.get_first() == b'+' {
+            if s[0] == b'+' {
                 let s = s.advance(1);
                 if s.eq_ignore_case(b"nan") {
                     return Some((F::NAN, 4));
                 } else if s.eq_ignore_case(b"inf") {
                     return Some((F::INFINITY, 1 + parse_inf_rest(s)));
                 }
-            } else if s.get_first() == b'-' {
+            } else if s[0] == b'-' {
                 let s = s.advance(1);
                 if s.eq_ignore_case(b"nan") {
                     return Some((F::NEG_NAN, 4));

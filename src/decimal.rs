@@ -189,9 +189,11 @@ impl Decimal {
 #[inline]
 pub fn parse_decimal(mut s: &[u8]) -> Decimal {
     // can't fail since it follows a call to parse_number
+    assert!(!s.is_empty(), "the buffer cannot be empty since it follows a call to parse_number");
     let mut d = Decimal::default();
     let start = s;
-    let c = s.get_first();
+
+    let c = s[0];
     d.negative = c == b'-';
     if c == b'-' || c == b'+' {
         s = s.advance(1);
@@ -205,11 +207,13 @@ pub fn parse_decimal(mut s: &[u8]) -> Decimal {
             s = s.skip_chars(b'0');
         }
         while s.len() >= 8 && d.num_digits + 8 < Decimal::MAX_DIGITS {
-            let v = s.read_u64();
+            // SAFETY: Safe since `s.len() >= 8`
+            let v = unsafe { s.read_u64() };
             if !is_8digits(v) {
                 break;
             }
-            d.digits[d.num_digits..].write_u64(v - 0x3030_3030_3030_3030);
+            // SAFETY: Safe since `num_digits + 8 < Decimal::MAX_DIGITS`
+            unsafe { d.digits[d.num_digits..].write_u64(v - 0x3030_3030_3030_3030) };
             d.num_digits += 8;
             s = s.advance(8);
         }
