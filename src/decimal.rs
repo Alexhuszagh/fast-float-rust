@@ -33,7 +33,8 @@ impl PartialEq for Decimal {
     }
 }
 
-impl Eq for Decimal {}
+impl Eq for Decimal {
+}
 
 impl Default for Decimal {
     fn default() -> Self {
@@ -253,7 +254,11 @@ pub fn parse_decimal(mut s: &[u8]) -> Decimal {
                 exp_num = 10 * exp_num + digit as i32;
             }
         });
-        d.decimal_point += if neg_exp { -exp_num } else { exp_num };
+        d.decimal_point += if neg_exp {
+            -exp_num
+        } else {
+            exp_num
+        };
     }
     for i in d.num_digits..Decimal::MAX_DIGITS_WITHOUT_OVERFLOW {
         d.digits[i] = 0;

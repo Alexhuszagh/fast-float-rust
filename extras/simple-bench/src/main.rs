@@ -6,20 +6,14 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::time::Instant;
 
+use fast_float2::FastFloat;
 use fastrand::Rng;
 use lexical::FromLexical;
+use random::RandomGen;
 use structopt::StructOpt;
 
-use fast_float2::FastFloat;
-
-use random::RandomGen;
-
 #[derive(Debug, StructOpt)]
-#[structopt(
-    name = "fast-float-simple-bench",
-    about = "fast-float benchmark utility",
-    no_version
-)]
+#[structopt(name = "fast-float-simple-bench", about = "fast-float benchmark utility", no_version)]
 struct Opt {
     /// Parse numbers as float32 (default is float64)
     #[structopt(short, long = "32")]
@@ -146,9 +140,7 @@ impl Method {
                 fast_float::parse_partial::<T, _>(s).unwrap_or_default().0
             }),
             Self::Lexical => run_bench(data, repeat, |s: &str| {
-                lexical_core::parse_partial::<T>(s.as_bytes())
-                    .unwrap_or_default()
-                    .0
+                lexical_core::parse_partial::<T>(s.as_bytes()).unwrap_or_default().0
             }),
             Self::FromStr => run_bench(data, repeat, |s: &str| s.parse::<T>().unwrap_or_default()),
         };
@@ -180,12 +172,8 @@ fn print_report(results: &[BenchResult], title: &str) {
     println!("| {:^width$} |", title, width = width);
     println!("|{:=<width$}|", "", width = width + 2);
     print_table("ns/float", results, width, |t, n, _| t as f64 / n as f64);
-    print_table("Mfloat/s", results, width, |t, n, _| {
-        1e3 * n as f64 / t as f64
-    });
-    print_table("MB/s", results, width, |t, _, b| {
-        b as f64 * 1e9 / 1024. / 1024. / t as f64
-    });
+    print_table("Mfloat/s", results, width, |t, n, _| 1e3 * n as f64 / t as f64);
+    print_table("MB/s", results, width, |t, _, b| b as f64 * 1e9 / 1024. / 1024. / t as f64);
     println!("|{:width$}|", "", width = width + 2);
     println!("{:=<width$}", "", width = width + 4);
 }
@@ -219,11 +207,7 @@ fn print_table(
     for res in results {
         print!("| {:<h$}", res.name, h = h);
         let (n, b) = (res.count, res.bytes);
-        let mut metrics = res
-            .times
-            .iter()
-            .map(|&t| transform(t, n, b))
-            .collect::<Vec<_>>();
+        let mut metrics = res.times.iter().map(|&t| transform(t, n, b)).collect::<Vec<_>>();
         metrics.sort_by(|a, b| a.partial_cmp(b).unwrap());
         for &(_, idx) in columns {
             print!("{:>w$.2}", metrics[idx], w = w);
@@ -240,23 +224,23 @@ struct Input {
 impl Input {
     pub fn from_file(filename: impl AsRef<Path>) -> Self {
         let filename = filename.as_ref();
-        let data = fs::read_to_string(&filename)
-            .unwrap()
-            .trim()
-            .lines()
-            .map(String::from)
-            .collect();
+        let data =
+            fs::read_to_string(&filename).unwrap().trim().lines().map(String::from).collect();
         let name = filename.file_name().unwrap().to_str().unwrap().into();
-        Self { data, name }
+        Self {
+            data,
+            name,
+        }
     }
 
     pub fn from_random(gen: RandomGen, count: usize, seed: u64) -> Self {
         let mut rng = Rng::with_seed(seed);
-        let data = iter::repeat_with(|| gen.gen(&mut rng))
-            .take(count)
-            .collect();
+        let data = iter::repeat_with(|| gen.gen(&mut rng)).take(count).collect();
         let name = format!("{}", gen);
-        Self { data, name }
+        Self {
+            data,
+            name,
+        }
     }
 
     pub fn count(&self) -> usize {
@@ -281,14 +265,16 @@ impl Input {
 fn main() {
     let opt: Opt = StructOpt::from_args();
 
-    let methods = if !opt.only_fast_float && !matches!(&opt.command, &Cmd::All {..}) {
+    let methods = if !opt.only_fast_float && !matches!(&opt.command, &Cmd::All { .. }) {
         Method::all().into()
     } else {
         vec![Method::FastFloat2]
     };
 
     let inputs = match opt.command {
-        Cmd::File { filename } => vec![Input::from_file(filename)],
+        Cmd::File {
+            filename,
+        } => vec![Input::from_file(filename)],
         Cmd::Random {
             gen,
             count,
@@ -300,8 +286,11 @@ fn main() {
                 fs::write(filename, input.data.join("\n")).unwrap();
             }
             vec![input]
-        }
-        Cmd::All { count, seed } => {
+        },
+        Cmd::All {
+            count,
+            seed,
+        } => {
             let mut inputs = vec![];
             let data_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("ext/data");
             inputs.push(Input::from_file(data_dir.join("mesh.txt")));
@@ -310,7 +299,7 @@ fn main() {
                 inputs.push(Input::from_random(gen, count, seed))
             }
             inputs
-        }
+        },
     };
 
     let mut results = vec![];

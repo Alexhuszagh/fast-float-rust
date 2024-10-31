@@ -27,7 +27,10 @@ impl<'a> AsciiStr<'a> {
     /// Safe if `n <= self.len()`
     #[inline]
     pub unsafe fn step_by(&mut self, n: usize) -> &mut Self {
-        debug_assert!(n <= self.len(), "buffer overflow: stepping by greater than our buffer length.");
+        debug_assert!(
+            n <= self.len(),
+            "buffer overflow: stepping by greater than our buffer length."
+        );
         // SAFETY: Safe if `n <= self.len()`
         unsafe { self.ptr = self.ptr.add(n) };
         self
@@ -102,10 +105,12 @@ impl<'a> AsciiStr<'a> {
 
     #[inline]
     pub fn first_digit(&self) -> Option<u8> {
-        self.first().and_then(|x| if x.is_ascii_digit() {
-            Some(x - b'0')
-        } else {
-            None
+        self.first().and_then(|x| {
+            if x.is_ascii_digit() {
+                Some(x - b'0')
+            } else {
+                None
+            }
         })
     }
 
@@ -153,7 +158,8 @@ impl<'a> AsciiStr<'a> {
     }
 }
 
-// Most of these are inherently unsafe; we assume we know what we're calling and when.
+// Most of these are inherently unsafe; we assume we know what we're calling and
+// when.
 pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     #[inline]
     fn check_first(&self, c: u8) -> bool {
@@ -216,7 +222,8 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     }
 }
 
-impl ByteSlice for [u8] {}
+impl ByteSlice for [u8] {
+}
 
 #[inline]
 pub fn is_8digits(v: u64) -> bool {

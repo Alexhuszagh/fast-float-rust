@@ -45,7 +45,8 @@ pub trait Float:
     fn pow10_fast_path(exponent: usize) -> Self;
 }
 
-impl private::Sealed for f32 {}
+impl private::Sealed for f32 {
+}
 
 impl Float for f32 {
     const INFINITY: Self = core::f32::INFINITY;
@@ -78,14 +79,14 @@ impl Float for f32 {
     #[inline]
     fn pow10_fast_path(exponent: usize) -> Self {
         #[allow(clippy::use_self)]
-        const TABLE: [f32; 16] = [
-            1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 0., 0., 0., 0., 0.,
-        ];
+        const TABLE: [f32; 16] =
+            [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 0., 0., 0., 0., 0.];
         TABLE[exponent & 15]
     }
 }
 
-impl private::Sealed for f64 {}
+impl private::Sealed for f64 {
+}
 
 impl Float for f64 {
     const INFINITY: Self = core::f64::INFINITY;

@@ -4,9 +4,9 @@ pub const N_POWERS_OF_FIVE: usize = (LARGEST_POWER_OF_FIVE - SMALLEST_POWER_OF_F
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use num_bigint::BigUint;
+
+    use super::*;
 
     fn compute_pow5_128(q: i32) -> (u64, u64) {
         let mut c = if q < 0 {
@@ -15,7 +15,11 @@ mod tests {
             while (BigUint::from(1_u8) << z) < pow5 {
                 z += 1;
             }
-            let b = if q < -27 { 2 * z + 128 } else { z + 127 };
+            let b = if q < -27 {
+                2 * z + 128
+            } else {
+                z + 127
+            };
             (BigUint::from(1_u8) << b) / pow5 + BigUint::from(1_u8)
         } else {
             BigUint::from(5_u8).pow(q as u32)

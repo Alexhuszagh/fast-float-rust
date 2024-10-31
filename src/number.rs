@@ -84,7 +84,8 @@ fn parse_8digits(mut v: u64) -> u64 {
 #[inline]
 fn try_parse_digits(s: &mut AsciiStr<'_>, x: &mut u64) {
     s.parse_digits(|digit| {
-        *x = x.wrapping_mul(10).wrapping_add(digit as u64); // overflows to be handled later
+        // overflows to be handled later
+        *x = x.wrapping_mul(10).wrapping_add(digit as u64);
     });
 }
 
@@ -104,16 +105,12 @@ fn try_parse_8digits(s: &mut AsciiStr<'_>, x: &mut u64) {
     // may cause overflows, to be handled later
     if let Some(v) = s.try_read_u64() {
         if is_8digits(v) {
-            *x = x
-                .wrapping_mul(1_0000_0000)
-                .wrapping_add(parse_8digits(v));
+            *x = x.wrapping_mul(1_0000_0000).wrapping_add(parse_8digits(v));
             // SAFETY: safe since there is at least 8 bytes from `try_read_u64`.
             unsafe { s.step_by(8) };
             if let Some(v) = s.try_read_u64() {
                 if is_8digits(v) {
-                    *x = x
-                        .wrapping_mul(1_0000_0000)
-                        .wrapping_add(parse_8digits(v));
+                    *x = x.wrapping_mul(1_0000_0000).wrapping_add(parse_8digits(v));
                     // SAFETY: safe since there is at least 8 bytes from `try_read_u64`.
                     unsafe { s.step_by(8) };
                 }
@@ -225,7 +222,8 @@ pub fn parse_number(s: &[u8]) -> Option<(Number, usize)> {
     while p.first_is2(b'0', b'.') {
         // SAFETY: safe since there's at least 1 element that is `0` or `.`.
         let byte = unsafe { p.first_unchecked() };
-        n_digits -= byte.saturating_sub(b'0' - 1) as isize; // '0' = b'.' + 2
+        // '0' = b'.' + 2
+        n_digits -= byte.saturating_sub(b'0' - 1) as isize;
         // SAFETY: safe since there's at least 1 element from the `first_is2` check.
         unsafe { p.step() };
     }
