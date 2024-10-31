@@ -3,7 +3,7 @@
 fn test_f64_random_from_u64() {
     const N_ITER: u64 = 1 << 32;
 
-    let rng = fastrand::Rng::with_seed(0);
+    let mut rng = fastrand::Rng::with_seed(0);
     let mut buf = ryu::Buffer::new();
     for _ in 0..N_ITER {
         let i: u64 = rng.u64(0..0xFFFF_FFFF_FFFF_FFFF);
