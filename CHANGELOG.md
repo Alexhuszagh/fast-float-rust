@@ -1,3 +1,12 @@
+## Unreleased
+
+- Remove most uses of unsafe.
+- Remove non-local safety invariants to prevent unsoundness.
+
+## 0.2.1
+
+- Fix undefined behavior in checking the buffer length.
+
 ## 0.2.0
 
 - Fixed an edge case where long decimals with trailing zeros were truncated.
