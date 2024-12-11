@@ -1,5 +1,4 @@
-fast-float2
-===========
+# fast-float2
 
 [![Build](https://github.com/Alexhuszagh/fast-float-rust/workflows/CI/badge.svg)](https://github.com/Alexhuszagh/fast-float-rust/actions?query=branch%3Amaster)
 [![Latest Version](https://img.shields.io/crates/v/fast-float2.svg)](https://crates.io/crates/fast-float2)
@@ -90,9 +89,6 @@ below (the only exception being the original fast_float C++ library, of course �
 which is within noise bounds of this crate). On modern machines like Apple M1, parsing throughput
 can reach up to 1.5 GB/s.
 
-In particular, it is faster than Rust standard library's `FromStr::from_str()` by a factor of 2-8x
-(larger factor for longer float strings), and is typically 2-3x faster than the nearest competitors.
-
 While various details regarding the algorithm can be found in the repository for the original
 C++ library, here are few brief notes:
 
@@ -109,54 +105,31 @@ C++ library, here are few brief notes:
 ## Benchmarks
 
 Below are tables of best timings in nanoseconds for parsing a single number
-into a 64-bit float.
+into a 64-bit float (using the median score).
 
-#### Intel i7-4771
+### Intel i7-14700K
 
-Intel i7-4771 3.5GHz, macOS, Rust 1.49.
+Intel i7-14700K 3.40GHz, Linux (WSL2), Rust 1.81.
 
-|                  | `canada` | `mesh`   | `uniform` | `iidi` | `iei`  | `rec32` |
-| ---------------- | -------- | -------- | --------- | ------ | ------ | ------- |
-| fast-float       | 21.58    | 10.70    | 19.36     | 40.50  | 26.07  | 29.13   |
-| lexical          | 65.90    | 23.28    | 54.75     | 75.80  | 52.18  | 75.36   |
-| from_str         | 174.43   | 22.30    | 99.93     | 227.76 | 111.31 | 204.46  |
-| fast_float (C++) | 22.78    | 10.99    | 20.05     | 41.12  | 27.51  | 30.85   |
-| abseil (C++)     | 42.66    | 32.88    | 46.01     | 50.83  | 46.33  | 49.95   |
-| netlib (C)       | 57.53    | 24.86    | 64.72     | 56.63  | 36.20  | 67.29   |
-| strtod (C)       | 286.10   | 31.15    | 258.73    | 295.73 | 205.72 | 315.95  |
+|                        | `canada` | `mesh`   | `uniform` | `bi`  | `iei`  | `rec32` |
+| ---------------------- | -------- | -------- | --------- | ----- | ------ | ------- |
+| fast-float2            | 9.98     | 5.56     | 10.08     | 56.19 | 14.52  | 15.09   |
+| fast-float             | 9.77     | 5.04     | 9.05      | 57.52 | 14.40  | 14.23   |
+| lexical                | 10.62    | 4.93     | 9.92      | 26.40 | 12.43  | 14.40   |
+| from_str               | 11.59    | 5.92     | 11.23     | 35.92 | 14.75  | 16.76   |
+| fast_float (C++)       | 12.58    | 6.35     | 11.86     | 31.55  | 12.22  | 11.97   |
+| abseil (C++)           | 25.32    | 15.70    | 25.88     | 43.42  | 23.54  | 26.75   |
+| netlib (C)             | 35.10    | 10.22    | 37.72     | 68.63  | 23.07  | 38.23   |
+| strtod (C)             | 52.63    | 26.47    | 46.51     | 88.11  | 33.37  | 53.36   |
+| doubleconversion (C++) | 32.50    | 14.69    | 47.80     | 70.01  | 205.72 | 45.66   |
 
-#### Apple M1
-
-Apple M1, macOS, Rust 1.49.
-
-|                  | `canada` | `mesh`   | `uniform` | `iidi` | `iei`  | `rec32` |
-| ---------------- | -------- | -------- | --------- | ------ | ------ | ------- |
-| fast-float       | 14.84    | 5.98     | 11.24     | 33.24  | 21.30  | 17.86   |
-| lexical          | 47.09    | 16.51    | 43.46     | 56.06  | 36.68  | 55.48   |
-| from_str         | 136.00   | 13.84    | 74.64     | 179.87 | 77.91  | 154.53  |
-| fast_float (C++) | 13.71    | 7.28     | 11.71     | 32.94  | 20.64  | 18.30   |
-| abseil (C++)     | 36.55    | 24.20    | 38.48     | 40.86  | 35.46  | 40.09   |
-| netlib (C)       | 47.19    | 14.12    | 48.85     | 52.28  | 33.70  | 48.79   |
-| strtod (C)       | 176.13   | 21.48    | 165.43    | 187.98 | 132.19 | 190.63  |
-
-#### AMD Rome
-
-AMD Rome, Linux, Rust 1.49.
-
-|                  | `canada` | `mesh`   | `uniform` | `iidi` | `iei`  | `rec32` |
-| ---------------- | -------- | -------- | --------- | ------ | ------ | ------- |
-| fast-float       | 25.90    | 12.12    | 20.54     | 47.01  | 29.23  | 32.36   |
-| lexical          | 63.18    | 22.13    | 54.78     | 81.23  | 55.06  | 79.14   |
-| from_str         | 190.06   | 26.10    | 102.44    | 239.87 | 119.04 | 211.73  |
-| fast_float (C++) | 21.29    | 10.47    | 18.31     | 42.33  | 24.56  | 29.76   |
-| abseil (C++)     | 44.54    | 34.13    | 47.38     | 52.64  | 43.77  | 53.03   |
-| netlib (C)       | 69.43    | 23.31    | 79.98     | 72.17  | 35.81  | 86.91   |
-| strtod (C)       | 123.37   | 65.68    | 101.58    | 118.36 | 118.61 | 123.72  |
+Note that the random number generation seems to differ between C/C++ and Rust, since the Rust implementations are slightly faster for pre-determined datasets like `canada` and `mesh`, but equivalent random number generators are slightly slower. Any performance penalty with `fast-float2` occurred due to fixing the UB in [check_len](https://github.com/aldanor/fast-float-rust/issues/28). The massive performance differences between `fast-float` (Rust) and `fast_float` (C++) are expected due to a faster fallback algorithms ([#96](https://github.com/fastfloat/fast_float/pull/96) and [#104](https://github.com/fastfloat/fast_float/pull/104)) used in these cases.
 
 #### Parsers
 
-- `fast-float` - this very crate
-- `lexical` – `lexical_core`, v0.7 (non-lossy; same performance as lossy)
+- `fast-float2` - this very crate
+- `fast-float` - the pre-ported variant
+- `lexical` – `lexical_core`, v1.0.05
 - `from_str` – Rust standard library, `FromStr` trait
 - `fast_float (C++)` – original C++ implementation of 'fast-float' method
 - `abseil (C++)` – Abseil C++ Common Libraries
@@ -168,9 +141,9 @@ AMD Rome, Linux, Rust 1.49.
 - `canada` – numbers in `canada.txt` file
 - `mesh` – numbers in `mesh.txt` file
 - `uniform` – uniform random numbers from 0 to 1
-- `iidi` – random numbers of format `%d%d.%d`
-- `iei` – random numbers of format `%de%d`
-- `rec32` – reciprocals of random 32-bit integers
+- `bi` – large, integer-only floats <!-- `big_ints` -- >
+- `int_e_int` – random numbers of format `%de%d` <!-- `int_e_int` -->
+- `rec32` – reciprocals of random 32-bit integers <!-- `one_over_rand32` -->
 
 #### Notes
 
