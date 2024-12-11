@@ -4,7 +4,7 @@ This crate provides a utility for benchmarking the `fast-float2` crate against
 To run a file-based test:
 
 ```sh
-cargo run --release -- file ext/canada.txt
+cargo run --release -- file ext/data/canada.txt
 ```
 
 There's two files used in benchmarking of the original fast_float C++ library
