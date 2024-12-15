@@ -1,0 +1,90 @@
+name: Bench
+
+# TODO: Change back to dispatch
+on:
+  [push, pull_request, workflow_dispatch]
+
+jobs:
+  bench:
+    name: Bench ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+
+      # VERSION/DIAGNOSTICS
+
+      - if: matrix.os == 'ubuntu-latest'
+        name: Get Linux CPU Info
+        run: cat /proc/cpuinfo
+        shell: bash
+
+      - if: matrix.os == 'macos-latest'
+        name: Get macOS CPU Info
+        run: sysctl -a | grep cpu
+        shell: bash
+
+      - if: matrix.os == 'windows-latest'
+        name: Get Windows CPU Info
+        run: wmic cpu list /format:list
+        shell: bash
+
+      - run: cargo --version
+      - run: cmake --version
+
+      # RUST
+
+      - run: |
+          cd extras/simple-bench
+          cargo build --release
+        name: Build Rust
+
+      - run: |
+          cd extras/simple-bench
+          cargo run --release -- file ext/data/canada.txt
+          cargo run --release -- file ext/data/mesh.txt
+          cargo run --release -- random uniform
+          cargo run --release -- random one_over_rand32
+          cargo run --release -- random simple_uniform32
+          cargo run --release -- random simple_int32
+          cargo run --release -- random simple_int64
+          cargo run --release -- random int_e_int
+          cargo run --release -- random int_e_int
+          cargo run --release -- random bigint_int_dot_int
+          cargo run --release -- random big_ints
+        name: Bench Rust
+        shell: bash
+
+      # C++
+
+      - run: |
+          cd extras/simple-bench/ext
+          cmake -DCMAKE_BUILD_TYPE=Release -B build .
+          cmake --build build --config Release
+        name: Build C/C++
+
+      - run: |
+          cd extras/simple-bench/ext
+          if [[ -f build/benchmarks/Release/benchmark.exe ]]; then
+            exe=build/benchmarks/Release/benchmark.exe
+          else
+            exe=build/benchmarks/benchmark
+          fi
+          "${exe}" -f data/canada.txt
+          "${exe}" -f data/mesh.txt
+          "${exe}" -m uniform
+          "${exe}" -m one_over_rand32
+          "${exe}" -m simple_uniform32
+          "${exe}" -m simple_int32
+          "${exe}" -m simple_int64
+          "${exe}" -m int_e_int
+          "${exe}" -m bigint_int_dot_int
+          "${exe}" -m big_ints
+        name: Bench C/C++
+        shell: bash
