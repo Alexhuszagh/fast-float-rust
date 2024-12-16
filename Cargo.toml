@@ -11,7 +11,14 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 autobenches = false
 edition = "2018"
-exclude = ["benches/*", "extras/*"]
+exclude = [
+    "benches/*",
+    "extras/*",
+    "clippy.toml",
+    "rustfmt.toml",
+    "SECURITY.md",
+    ".git*",
+]
 # FIXME: rust-version is not supported until 1.56.0.
 rust-version = "1.37"
 
@@ -25,9 +32,6 @@ hexf-parse = "0.2.1"
 ryu = "1.0"
 fastrand = "2.1.1"
 num-bigint = "0.4.6"
-
-[workspace]
-members = [".", "extras/data-tests", "extras/simple-bench"]
 
 [profile.release]
 lto = "fat"
