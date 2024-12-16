@@ -6,60 +6,71 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::time::Instant;
 
+use clap::Parser;
 use fast_float2::FastFloat;
 use fastrand::Rng;
 use lexical::FromLexical;
 use random::RandomGen;
-use structopt::StructOpt;
+//use structopt::StructOpt;
 
-#[derive(Debug, StructOpt)]
-#[structopt(name = "fast-float-simple-bench", about = "fast-float benchmark utility", no_version)]
+#[derive(Parser, Debug)]
+#[command(name = "fast-float-simple-bench", about = "fast-float benchmark utility")]
 struct Opt {
     /// Parse numbers as float32 (default is float64)
-    #[structopt(short, long = "32")]
+    #[arg(short, long = "32")]
     float32: bool,
+
     /// How many times to repeat parsing
-    #[structopt(short, default_value = "1000")]
+    #[arg(short, long, default_value = "1000")]
     repeat: usize,
+
     /// Only run fast-float benches
-    #[structopt(short)]
+    #[arg(short, long, default_value = "false")]
     only_fast_float: bool,
-    #[structopt(subcommand)]
+
+    #[command(subcommand)]
     command: Cmd,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
 enum Cmd {
     /// Read the floats from file
     File {
         /// Input file (one number per line)
-        #[structopt(parse(from_os_str))]
+        #[arg(value_parser)]
         filename: PathBuf,
     },
+
     /// Generate random floats in (0, 1]
     Random {
         /// Random generator to be used
-        #[structopt(
+        #[arg(
+            value_enum,
             default_value = "uniform",
-            parse(try_from_str),
-            possible_values = RandomGen::variants()
+            //possible_values = RandomGen::variants()
         )]
         gen: RandomGen,
+
         /// Number of random floats generated
-        #[structopt(short = "n", default_value = "50000")]
+        #[arg(short = 'n', default_value = "50000")]
         count: usize,
+
         /// Random generator seed
-        #[structopt(short, default_value = "0")]
+        #[arg(short, default_value = "0")]
         seed: u64,
+
         /// Also save the generated inputs to file
-        #[structopt(short = "f", parse(from_os_str))]
+        #[arg(value_parser, short = 'f')]
         filename: Option<PathBuf>,
     },
+
     /// Run all benchmarks for fast-float only
     All {
         /// Number of random floats generated
-        #[structopt(short = "n", default_value = "50000")]
+        #[structopt(short = 'n', default_value = "50000")]
         count: usize,
+
         /// Random generator seed
         #[structopt(short, default_value = "0")]
         seed: u64,
@@ -263,7 +274,7 @@ impl Input {
 }
 
 fn main() {
-    let opt: Opt = StructOpt::from_args();
+    let opt = Opt::parse();
 
     let methods = if !opt.only_fast_float && !matches!(&opt.command, &Cmd::All { .. }) {
         Method::all().into()

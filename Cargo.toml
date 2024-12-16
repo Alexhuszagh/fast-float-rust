@@ -33,9 +33,6 @@ ryu = "1.0"
 fastrand = "2.1.1"
 num-bigint = "0.4.6"
 
-[workspace]
-members = [".", "extras/data-tests", "extras/simple-bench"]
-
 [profile.release]
 lto = "fat"
 codegen-units = 1

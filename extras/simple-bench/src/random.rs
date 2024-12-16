@@ -50,19 +50,6 @@ impl FromStr for RandomGen {
 }
 
 impl RandomGen {
-    pub fn variants() -> &'static [&'static str] {
-        &[
-            "uniform",
-            "one_over_rand32",
-            "simple_uniform32",
-            "simple_int32",
-            "int_e_int",
-            "simple_int64",
-            "bigint_int_dot_int",
-            "big_ints",
-        ]
-    }
-
     pub fn all() -> &'static [Self] {
         &[
             Self::Uniform,
