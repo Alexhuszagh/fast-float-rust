@@ -21,6 +21,7 @@ jobs:
       - run: cargo check
       - run: cargo test
       - run: cd extras/data-tests && cargo run --release
+      - run: cargo build --tests --features no-panic --release
 
   msrv:
     name: Rust ${{matrix.rust}}

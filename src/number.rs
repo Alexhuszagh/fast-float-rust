@@ -1,5 +1,6 @@
 use crate::common::{is_8digits, AsciiStr, ByteSlice};
 use crate::float::Float;
+use crate::GetAt;
 
 const MIN_19DIGIT_INT: u64 = 100_0000_0000_0000_0000;
 
@@ -54,7 +55,7 @@ impl Number {
             } else {
                 // disguised fast path
                 let shift = self.exponent - F::MAX_EXPONENT_FAST_PATH;
-                let mantissa = self.mantissa.checked_mul(INT_POW10[shift as usize])?;
+                let mantissa = self.mantissa.checked_mul(*INT_POW10.at(shift as usize))?;
                 if mantissa > F::MAX_MANTISSA_FAST_PATH {
                     return None;
                 }
@@ -262,7 +263,7 @@ pub fn parse_number(s: &[u8]) -> Option<(Number, usize)> {
 #[inline]
 pub fn parse_inf_nan<F: Float>(s: &[u8]) -> Option<(F, usize)> {
     fn parse_inf_rest(s: &[u8]) -> usize {
-        if s.len() >= 8 && s[3..].eq_ignore_case(b"inity") {
+        if s.len() >= 8 && s.at(3..).eq_ignore_case(b"inity") {
             8
         } else {
             3
@@ -274,14 +275,14 @@ pub fn parse_inf_nan<F: Float>(s: &[u8]) -> Option<(F, usize)> {
         } else if s.eq_ignore_case(b"inf") {
             return Some((F::INFINITY, parse_inf_rest(s)));
         } else if s.len() >= 4 {
-            if s[0] == b'+' {
+            if *s.at(0) == b'+' {
                 let s = s.advance(1);
                 if s.eq_ignore_case(b"nan") {
                     return Some((F::NAN, 4));
                 } else if s.eq_ignore_case(b"inf") {
                     return Some((F::INFINITY, 1 + parse_inf_rest(s)));
                 }
-            } else if s[0] == b'-' {
+            } else if *s.at(0) == b'-' {
                 let s = s.advance(1);
                 if s.eq_ignore_case(b"nan") {
                     return Some((F::NEG_NAN, 4));

@@ -1,6 +1,8 @@
 use core::marker::PhantomData;
 use core::ptr;
 
+use crate::GetAt;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AsciiStr<'a> {
     ptr: *const u8,
@@ -172,13 +174,13 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
         if s.len() < u.len() {
             return false;
         }
-        let d = (0..u.len()).fold(0, |d, i| d | s[i] ^ u[i]);
+        let d = (0..u.len()).fold(0, |d, i| d | s.at(i) ^ u.at(i));
         d == 0 || d == 32
     }
 
     #[inline]
     fn advance(&self, n: usize) -> &[u8] {
-        &self.as_ref()[n..]
+        self.as_ref().at(n..)
     }
 
     #[inline]
@@ -215,8 +217,7 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     }
 }
 
-impl ByteSlice for [u8] {
-}
+impl ByteSlice for [u8] {}
 
 #[inline]
 pub fn is_8digits(v: u64) -> bool {

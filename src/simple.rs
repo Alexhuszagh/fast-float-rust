@@ -1,6 +1,7 @@
 use crate::common::AdjustedMantissa;
 use crate::decimal::{parse_decimal, Decimal};
 use crate::float::Float;
+use crate::GetAt;
 
 #[inline]
 pub fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
@@ -11,7 +12,7 @@ pub fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
 
     let get_shift = |n| {
         if n < NUM_POWERS {
-            POWERS[n] as usize
+            *POWERS.at(n) as usize
         } else {
             MAX_SHIFT
         }
