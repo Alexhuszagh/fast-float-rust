@@ -4,6 +4,20 @@ use crate::common::{is_8digits, parse_digits, ByteSlice};
 use crate::GetAt;
 use crate::GetAtMut;
 
+#[cfg(not(feature = "no-panic"))]
+macro_rules! no_panic_assert {
+    ($($arg:tt)*) => {
+        assert!($($arg)*);
+    };
+}
+
+#[cfg(feature = "no-panic")]
+macro_rules! no_panic_assert {
+    ($($arg:tt)*) => {
+        debug_assert!($($arg)*);
+    };
+}
+
 #[derive(Clone)]
 pub struct Decimal {
     pub num_digits: usize,
@@ -189,9 +203,14 @@ impl Decimal {
 }
 
 #[inline]
-pub fn parse_decimal(mut s: &[u8]) -> Decimal {
+pub(crate) fn parse_decimal(mut s: &[u8]) -> Decimal {
     // can't fail since it follows a call to parse_number
-    debug_assert!(
+    // NOTE: This is a valid since it **ALWAYS** must be called from `parse_long_mantissa`
+    // which calls it from `parse_float` which calls `parse_number`. Since if `no-panic`
+    // is not enabled, this panics both here and at the next step, this **ONLY**
+    // introduces non-local safety invariants if `no-panic` is true, however, all the
+    // core logic is identical.
+    no_panic_assert!(
         !s.is_empty(),
         "the buffer cannot be empty since it follows a call to parse_number"
     );

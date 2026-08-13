@@ -4,7 +4,7 @@ use crate::float::Float;
 use crate::GetAt;
 
 #[inline]
-pub fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
+pub(crate) fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
     const MAX_SHIFT: usize = 60;
     const NUM_POWERS: usize = 19;
     const POWERS: [u8; 19] =

@@ -154,11 +154,12 @@ pub fn parse<T: FastFloat, S: AsRef<[u8]>>(s: S) -> Result<T> {
 /// Will return an error either if the string doesn't start with a valid decimal
 /// number – that is, if no zero digits were processed.
 #[inline]
+#[cfg_attr(feature = "no-panic", no_panic)]
 pub fn parse_partial<T: FastFloat, S: AsRef<[u8]>>(s: S) -> Result<(T, usize)> {
     T::parse_float_partial(s)
 }
 
-pub trait GetAt<Index, R: ?Sized> {
+pub(crate) trait GetAt<Index, R: ?Sized> {
     fn at(&self, index: Index) -> &R;
 }
 
@@ -192,7 +193,7 @@ impl<T> GetAt<RangeTo<usize>, [T]> for [T] {
     }
 }
 
-pub trait GetAtMut<Index, R: ?Sized> {
+pub(crate) trait GetAtMut<Index, R: ?Sized> {
     fn at_mut(&mut self, index: Index) -> &mut R;
 }
 

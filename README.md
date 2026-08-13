@@ -72,8 +72,7 @@ containing the patches and security updates.
 
 ## Features
 
-`no-panic`: when this feature is enabled, the crate guarantees that it will not trigger a runtime panic.
-
+`no-panic`: when this feature is enabled, the crate guarantees that it will not trigger a runtime panic. This **disables** runtime index bounds checking and therefore introduces 1 non-local safety invariant. See [decimal.parse_decimal](/src/decimal.rs) for the invariant conditions.
 
 ## Testing
 
