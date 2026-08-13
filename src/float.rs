@@ -1,6 +1,8 @@
 use core::fmt::{Debug, Display};
 use core::ops::{Add, Div, Mul, Neg};
 
+use crate::GetAt;
+
 mod private {
     pub trait Sealed {}
 }
@@ -45,8 +47,7 @@ pub trait Float:
     fn pow10_fast_path(exponent: usize) -> Self;
 }
 
-impl private::Sealed for f32 {
-}
+impl private::Sealed for f32 {}
 
 impl Float for f32 {
     const INFINITY: Self = core::f32::INFINITY;
@@ -81,12 +82,11 @@ impl Float for f32 {
         #[allow(clippy::use_self)]
         const TABLE: [f32; 16] =
             [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 0., 0., 0., 0., 0.];
-        TABLE[exponent & 15]
+        *TABLE.at(exponent & 15)
     }
 }
 
-impl private::Sealed for f64 {
-}
+impl private::Sealed for f64 {}
 
 impl Float for f64 {
     const INFINITY: Self = core::f64::INFINITY;
@@ -123,6 +123,6 @@ impl Float for f64 {
             1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15,
             1e16, 1e17, 1e18, 1e19, 1e20, 1e21, 1e22, 0., 0., 0., 0., 0., 0., 0., 0., 0.,
         ];
-        TABLE[exponent & 31]
+        *TABLE.at(exponent & 31)
     }
 }

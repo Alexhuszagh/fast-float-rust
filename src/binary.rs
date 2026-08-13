@@ -1,6 +1,7 @@
 use crate::common::AdjustedMantissa;
 use crate::float::Float;
 use crate::table::{LARGEST_POWER_OF_FIVE, POWER_OF_FIVE_128, SMALLEST_POWER_OF_FIVE};
+use crate::GetAt;
 
 #[inline]
 pub fn compute_float<F: Float>(q: i64, mut w: u64) -> AdjustedMantissa {
@@ -94,7 +95,7 @@ fn compute_product_approx(q: i64, w: u64, precision: usize) -> (u64, u64) {
     // comes from a parsed result. Since this is unlikely to have any major
     // performance implications, as is determined empirically, we keep the
     // bounds check despite the performance hit.
-    let (lo5, hi5) = POWER_OF_FIVE_128[index];
+    let (lo5, hi5) = *POWER_OF_FIVE_128.at(index);
     let (mut first_lo, mut first_hi) = full_multiplication(w, lo5);
     if first_hi & mask == mask {
         let (_, second_hi) = full_multiplication(w, hi5);

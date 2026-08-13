@@ -1,6 +1,22 @@
 use core::fmt::{self, Debug};
 
 use crate::common::{is_8digits, parse_digits, ByteSlice};
+use crate::GetAt;
+use crate::GetAtMut;
+
+#[cfg(not(feature = "no-panic"))]
+macro_rules! no_panic_assert {
+    ($($arg:tt)*) => {
+        assert!($($arg)*);
+    };
+}
+
+#[cfg(feature = "no-panic")]
+macro_rules! no_panic_assert {
+    ($($arg:tt)*) => {
+        debug_assert!($($arg)*);
+    };
+}
 
 #[derive(Clone)]
 pub struct Decimal {
@@ -18,7 +34,7 @@ impl Debug for Decimal {
             .field("decimal_point", &self.decimal_point)
             .field("negative", &self.negative)
             .field("truncated", &self.truncated)
-            .field("digits", &(&self.digits[..self.num_digits]))
+            .field("digits", &(&self.digits.at(..self.num_digits)))
             .finish()
     }
 }
@@ -33,8 +49,7 @@ impl PartialEq for Decimal {
     }
 }
 
-impl Eq for Decimal {
-}
+impl Eq for Decimal {}
 
 impl Default for Decimal {
     fn default() -> Self {
@@ -56,14 +71,14 @@ impl Decimal {
     #[inline]
     pub fn try_add_digit(&mut self, digit: u8) {
         if self.num_digits < Self::MAX_DIGITS {
-            self.digits[self.num_digits] = digit;
+            *self.digits.at_mut(self.num_digits) = digit;
         }
         self.num_digits += 1;
     }
 
     #[inline]
     pub fn trim(&mut self) {
-        while self.num_digits != 0 && self.digits[self.num_digits - 1] == 0 {
+        while self.num_digits != 0 && *self.digits.at(self.num_digits - 1) == 0 {
             self.num_digits -= 1;
         }
     }
@@ -80,14 +95,14 @@ impl Decimal {
         for i in 0..dp {
             n *= 10;
             if i < self.num_digits {
-                n += self.digits[i] as u64;
+                n += *self.digits.at(i) as u64;
             }
         }
         let mut round_up = false;
         if dp < self.num_digits {
-            round_up = self.digits[dp] >= 5;
-            if self.digits[dp] == 5 && dp + 1 == self.num_digits {
-                round_up = self.truncated || ((dp != 0) && (1 & self.digits[dp - 1] != 0));
+            round_up = *self.digits.at(dp) >= 5;
+            if *self.digits.at(dp) == 5 && dp + 1 == self.num_digits {
+                round_up = self.truncated || ((dp != 0) && (1 & self.digits.at(dp - 1) != 0));
             }
         }
         if round_up {
@@ -108,11 +123,11 @@ impl Decimal {
         while read_index != 0 {
             read_index -= 1;
             write_index -= 1;
-            n += (self.digits[read_index] as u64) << shift;
+            n += (*self.digits.at(read_index) as u64) << shift;
             let quotient = n / 10;
             let remainder = n - (10 * quotient);
             if write_index < Self::MAX_DIGITS {
-                self.digits[write_index] = remainder as u8;
+                *self.digits.at_mut(write_index) = remainder as u8;
             } else if remainder > 0 {
                 self.truncated = true;
             }
@@ -123,7 +138,7 @@ impl Decimal {
             let quotient = n / 10;
             let remainder = n - (10 * quotient);
             if write_index < Self::MAX_DIGITS {
-                self.digits[write_index] = remainder as u8;
+                *self.digits.at_mut(write_index) = remainder as u8;
             } else if remainder > 0 {
                 self.truncated = true;
             }
@@ -144,7 +159,7 @@ impl Decimal {
         let mut n = 0_u64;
         while (n >> shift) == 0 {
             if read_index < self.num_digits {
-                n = (10 * n) + self.digits[read_index] as u64;
+                n = (10 * n) + *self.digits.at(read_index) as u64;
                 read_index += 1;
             } else if n == 0 {
                 return;
@@ -167,16 +182,16 @@ impl Decimal {
         let mask = (1_u64 << shift) - 1;
         while read_index < self.num_digits {
             let new_digit = (n >> shift) as u8;
-            n = (10 * (n & mask)) + self.digits[read_index] as u64;
+            n = (10 * (n & mask)) + *self.digits.at(read_index) as u64;
             read_index += 1;
-            self.digits[write_index] = new_digit;
+            *self.digits.at_mut(write_index) = new_digit;
             write_index += 1;
         }
         while n > 0 {
             let new_digit = (n >> shift) as u8;
             n = 10 * (n & mask);
             if write_index < Self::MAX_DIGITS {
-                self.digits[write_index] = new_digit;
+                *self.digits.at_mut(write_index) = new_digit;
                 write_index += 1;
             } else if new_digit > 0 {
                 self.truncated = true;
@@ -188,13 +203,21 @@ impl Decimal {
 }
 
 #[inline]
-pub fn parse_decimal(mut s: &[u8]) -> Decimal {
+pub(crate) fn parse_decimal(mut s: &[u8]) -> Decimal {
     // can't fail since it follows a call to parse_number
-    assert!(!s.is_empty(), "the buffer cannot be empty since it follows a call to parse_number");
+    // NOTE: This is a valid since it **ALWAYS** must be called from `parse_long_mantissa`
+    // which calls it from `parse_float` which calls `parse_number`. Since if `no-panic`
+    // is not enabled, this panics both here and at the next step, this **ONLY**
+    // introduces non-local safety invariants if `no-panic` is true, however, all the
+    // core logic is identical.
+    no_panic_assert!(
+        !s.is_empty(),
+        "the buffer cannot be empty since it follows a call to parse_number"
+    );
     let mut d = Decimal::default();
     let start = s;
 
-    let c = s[0];
+    let c = *s.at(0);
     d.negative = c == b'-';
     if c == b'-' || c == b'+' {
         s = s.advance(1);
@@ -214,7 +237,7 @@ pub fn parse_decimal(mut s: &[u8]) -> Decimal {
                 break;
             }
             // SAFETY: Safe since `num_digits + 8 < Decimal::MAX_DIGITS`
-            unsafe { d.digits[d.num_digits..].write_u64(v - 0x3030_3030_3030_3030) };
+            unsafe { d.digits.at_mut(d.num_digits..).write_u64(v - 0x3030_3030_3030_3030) };
             d.num_digits += 8;
             s = s.advance(8);
         }
@@ -224,7 +247,7 @@ pub fn parse_decimal(mut s: &[u8]) -> Decimal {
     if d.num_digits != 0 {
         // Ignore the trailing zeros if there are any
         let mut n_trailing_zeros = 0;
-        for &c in start[..(start.len() - s.len())].iter().rev() {
+        for &c in start.at(..(start.len() - s.len())).iter().rev() {
             if c == b'0' {
                 n_trailing_zeros += 1;
             } else if c != b'.' {
@@ -261,7 +284,7 @@ pub fn parse_decimal(mut s: &[u8]) -> Decimal {
         };
     }
     for i in d.num_digits..Decimal::MAX_DIGITS_WITHOUT_OVERFLOW {
-        d.digits[i] = 0;
+        *d.digits.at_mut(i) = 0;
     }
     d
 }
@@ -325,18 +348,18 @@ fn number_of_digits_decimal_left_shift(d: &Decimal, mut shift: usize) -> usize {
     ];
 
     shift &= 63;
-    let x_a = TABLE[shift];
-    let x_b = TABLE[shift + 1];
+    let x_a = *TABLE.at(shift);
+    let x_b = *TABLE.at(shift + 1);
     let num_new_digits = (x_a >> 11) as usize;
     let pow5_a = (0x7FF & x_a) as usize;
     let pow5_b = (0x7FF & x_b) as usize;
-    let pow5 = &TABLE_POW5[pow5_a..];
+    let pow5 = TABLE_POW5.at(pow5_a..);
     for (i, &p5) in pow5.iter().enumerate().take(pow5_b - pow5_a) {
         if i >= d.num_digits {
             return num_new_digits - 1;
-        } else if d.digits[i] == p5 {
+        } else if *d.digits.at(i) == p5 {
             continue;
-        } else if d.digits[i] < p5 {
+        } else if *d.digits.at(i) < p5 {
             return num_new_digits - 1;
         } else {
             return num_new_digits;

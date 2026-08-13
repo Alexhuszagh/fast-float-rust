@@ -60,7 +60,11 @@
     clippy::struct_field_names
 )]
 
+#[cfg(feature = "no-panic")]
+use no_panic::no_panic;
+
 use core::fmt::{self, Display};
+use core::ops::{RangeFrom, RangeTo};
 
 mod binary;
 mod common;
@@ -124,10 +128,8 @@ pub trait FastFloat: float::Float {
     }
 }
 
-impl FastFloat for f32 {
-}
-impl FastFloat for f64 {
-}
+impl FastFloat for f32 {}
+impl FastFloat for f64 {}
 
 /// Parse a decimal number from string into float (full).
 ///
@@ -136,6 +138,7 @@ impl FastFloat for f64 {
 /// Will return an error either if the string is not a valid decimal number
 /// or if any characters are left remaining unparsed.
 #[inline]
+#[cfg_attr(feature = "no-panic", no_panic)]
 pub fn parse<T: FastFloat, S: AsRef<[u8]>>(s: S) -> Result<T> {
     T::parse_float(s)
 }
@@ -151,6 +154,65 @@ pub fn parse<T: FastFloat, S: AsRef<[u8]>>(s: S) -> Result<T> {
 /// Will return an error either if the string doesn't start with a valid decimal
 /// number – that is, if no zero digits were processed.
 #[inline]
+#[cfg_attr(feature = "no-panic", no_panic)]
 pub fn parse_partial<T: FastFloat, S: AsRef<[u8]>>(s: S) -> Result<(T, usize)> {
     T::parse_float_partial(s)
+}
+
+pub(crate) trait GetAt<Index, R: ?Sized> {
+    fn at(&self, index: Index) -> &R;
+}
+
+impl<T> GetAt<usize, T> for [T] {
+    fn at(&self, index: usize) -> &T {
+        #[cfg(not(feature = "no-panic"))]
+        let r = &self[index];
+        #[cfg(feature = "no-panic")]
+        let r = unsafe { self.get_unchecked(index) };
+        r
+    }
+}
+
+impl<T> GetAt<RangeFrom<usize>, [T]> for [T] {
+    fn at(&self, index: RangeFrom<usize>) -> &[T] {
+        #[cfg(not(feature = "no-panic"))]
+        let r = &self[index];
+        #[cfg(feature = "no-panic")]
+        let r = unsafe { self.get_unchecked(index) };
+        r
+    }
+}
+
+impl<T> GetAt<RangeTo<usize>, [T]> for [T] {
+    fn at(&self, index: RangeTo<usize>) -> &[T] {
+        #[cfg(not(feature = "no-panic"))]
+        let r = &self[index];
+        #[cfg(feature = "no-panic")]
+        let r = unsafe { self.get_unchecked(index) };
+        r
+    }
+}
+
+pub(crate) trait GetAtMut<Index, R: ?Sized> {
+    fn at_mut(&mut self, index: Index) -> &mut R;
+}
+
+impl<T> GetAtMut<usize, T> for [T] {
+    fn at_mut(&mut self, index: usize) -> &mut T {
+        #[cfg(not(feature = "no-panic"))]
+        let r = &mut self[index];
+        #[cfg(feature = "no-panic")]
+        let r = unsafe { self.get_unchecked_mut(index) };
+        r
+    }
+}
+
+impl<T> GetAtMut<RangeFrom<usize>, [T]> for [T] {
+    fn at_mut(&mut self, index: RangeFrom<usize>) -> &mut [T] {
+        #[cfg(not(feature = "no-panic"))]
+        let r = &mut self[index];
+        #[cfg(feature = "no-panic")]
+        let r = unsafe { self.get_unchecked_mut(index) };
+        r
+    }
 }

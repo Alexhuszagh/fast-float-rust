@@ -70,6 +70,10 @@ on little-endian architectures.
 Since [fast-float-rust](https://github.com/aldanor/fast-float-rust) is unmaintained, this is a fork
 containing the patches and security updates.
 
+## Features
+
+`no-panic`: when this feature is enabled, the crate guarantees that it will not trigger a runtime panic. This **disables** runtime index bounds checking and therefore introduces 1 non-local safety invariant. See [decimal.parse_decimal](/src/decimal.rs) for the invariant conditions.
+
 ## Testing
 
 There are a few ways this crate is tested:
