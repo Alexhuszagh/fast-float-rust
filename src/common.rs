@@ -28,6 +28,7 @@ impl<'a> AsciiStr<'a> {
     ///
     /// Safe if `n <= self.len()`
     #[inline]
+    #[allow(deprecated)] // Remove legacy aliases when MSRV is 1.53.0+
     pub unsafe fn step_by(&mut self, n: usize) -> &mut Self {
         debug_assert!(
             // FIXME: remove when we drop support for < 1.43.0
@@ -217,7 +218,8 @@ pub trait ByteSlice: AsRef<[u8]> + AsMut<[u8]> {
     }
 }
 
-impl ByteSlice for [u8] {}
+impl ByteSlice for [u8] {
+}
 
 #[inline]
 pub fn is_8digits(v: u64) -> bool {

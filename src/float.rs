@@ -47,8 +47,10 @@ pub trait Float:
     fn pow10_fast_path(exponent: usize) -> Self;
 }
 
-impl private::Sealed for f32 {}
+impl private::Sealed for f32 {
+}
 
+#[allow(deprecated)] // Remove legacy aliases when MSRV is 1.43.0+
 impl Float for f32 {
     const INFINITY: Self = core::f32::INFINITY;
     const NEG_INFINITY: Self = core::f32::NEG_INFINITY;
@@ -86,8 +88,10 @@ impl Float for f32 {
     }
 }
 
-impl private::Sealed for f64 {}
+impl private::Sealed for f64 {
+}
 
+#[allow(deprecated)] // Remove legacy aliases when MSRV is 1.43.0+
 impl Float for f64 {
     const INFINITY: Self = core::f64::INFINITY;
     const NEG_INFINITY: Self = core::f64::NEG_INFINITY;

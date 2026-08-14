@@ -15,10 +15,10 @@ macro_rules! check {
         check!($ty, stringify!($s), $s)
     }};
     ($ty:ident, $s:expr,inf) => {{
-        check!($ty, $s, core::$ty::INFINITY)
+        check!($ty, $s, $ty::INFINITY)
     }};
     ($ty:ident, $s:expr,neg_inf) => {{
-        check!($ty, $s, core::$ty::NEG_INFINITY)
+        check!($ty, $s, $ty::NEG_INFINITY)
     }};
     ($ty:ident, $s:expr, $e:expr) => {{
         let string = String::from($s);
