@@ -37,6 +37,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust}}
+      - run: |
+          pushd extras/data-tests
+          cargo check
+          popd
+      # NOTE: This is valid, since the dependent projects ignore this
+      - run: rm Cargo.lock
       - run: cargo check
       - run: cargo build
 
