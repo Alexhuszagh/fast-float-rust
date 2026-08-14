@@ -1,6 +1,6 @@
 use crate::common::{is_8digits, AsciiStr, ByteSlice};
 use crate::float::Float;
-use crate::GetAt;
+use crate::index::GetAt;
 
 const MIN_19DIGIT_INT: u64 = 100_0000_0000_0000_0000;
 

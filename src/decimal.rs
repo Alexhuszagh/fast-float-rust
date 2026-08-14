@@ -1,8 +1,7 @@
 use core::fmt::{self, Debug};
 
 use crate::common::{is_8digits, parse_digits, ByteSlice};
-use crate::GetAt;
-use crate::GetAtMut;
+use crate::index::{GetAt, GetAtMut};
 
 #[cfg(not(feature = "no-panic"))]
 macro_rules! no_panic_assert {

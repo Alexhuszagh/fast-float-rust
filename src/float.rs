@@ -1,7 +1,7 @@
 use core::fmt::{Debug, Display};
 use core::ops::{Add, Div, Mul, Neg};
 
-use crate::GetAt;
+use crate::index::GetAt;
 
 mod private {
     pub trait Sealed {}

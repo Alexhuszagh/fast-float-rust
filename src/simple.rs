@@ -1,7 +1,7 @@
 use crate::common::AdjustedMantissa;
 use crate::decimal::{parse_decimal, Decimal};
 use crate::float::Float;
-use crate::GetAt;
+use crate::index::GetAt;
 
 #[inline]
 #[allow(clippy::redundant_pub_crate)] // NOTE: ensure this is never exposed due to no-panic safety
