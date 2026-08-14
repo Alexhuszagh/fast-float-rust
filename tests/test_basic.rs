@@ -114,6 +114,7 @@ fn test_f64_inf() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // NOTE: hexf_parse does not work with Miri
 fn test_f64_long() {
     check_f64!(
         "\
@@ -208,6 +209,7 @@ fn test_f64_long() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // NOTE: hexf_parse does not work with Miri
 fn test_f64_general() {
     check_f64!("9007199254740993.0", hexf64("0x1.p+53"));
     check_f64!(append_zeros("9007199254740993.0", 1000), hexf64("0x1.p+53"));
@@ -282,6 +284,7 @@ fn test_f32_inf() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // NOTE: hexf_parse does not work with Miri
 fn test_f32_basic() {
     let f1 = "\
         1.175494140627517859246175898662808184331245864732796240031385942718174675986064\
