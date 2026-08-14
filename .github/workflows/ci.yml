@@ -22,6 +22,7 @@ jobs:
       - run: cargo test
       - run: cd extras/data-tests && cargo run --release
       - run: cargo build --tests --features no-panic --release
+      - run: cargo test --features no-panic --release --tests
 
   msrv:
     name: Rust ${{matrix.rust}}
@@ -37,10 +38,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust}}
-      - run: |
-          pushd extras/data-tests
-          cargo check
-          popd
+      - run: cd extras/data-tests && cargo check
       # NOTE: This is valid, since the dependent projects ignore this
       - run: rm Cargo.lock
       - run: cargo check
