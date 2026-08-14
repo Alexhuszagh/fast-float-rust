@@ -30,11 +30,11 @@ std = []
 no-panic = { version = "0.1", optional = true }
 
 [dev-dependencies]
-lexical-core = "1.0.2"
+lexical-core = "1.0.6"
 hexf-parse = "0.2.1"
-ryu = "1.0"
-fastrand = "2.1.1"
-num-bigint = "0.4.6"
+ryu = "1.0.20"
+fastrand = "2.3.0"
+num-bigint = "0.5.1"
 
 [profile.release]
 lto = "fat"
