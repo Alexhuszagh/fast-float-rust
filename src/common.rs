@@ -1,7 +1,7 @@
 use core::marker::PhantomData;
 use core::ptr;
 
-use crate::GetAt;
+use crate::index::GetAt;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AsciiStr<'a> {

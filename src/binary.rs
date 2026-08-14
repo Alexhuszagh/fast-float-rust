@@ -1,7 +1,7 @@
 use crate::common::AdjustedMantissa;
 use crate::float::Float;
+use crate::index::GetAt;
 use crate::table::{LARGEST_POWER_OF_FIVE, POWER_OF_FIVE_128, SMALLEST_POWER_OF_FIVE};
-use crate::GetAt;
 
 #[inline]
 pub fn compute_float<F: Float>(q: i64, mut w: u64) -> AdjustedMantissa {

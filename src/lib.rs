@@ -61,7 +61,6 @@
 )]
 
 use core::fmt::{self, Display};
-use core::ops::{RangeFrom, RangeTo};
 
 #[cfg(feature = "no-panic")]
 use no_panic::no_panic;
@@ -70,6 +69,7 @@ mod binary;
 mod common;
 mod decimal;
 mod float;
+mod index;
 mod number;
 mod parse;
 mod simple;
@@ -159,62 +159,4 @@ pub fn parse<T: FastFloat, S: AsRef<[u8]>>(s: S) -> Result<T> {
 #[cfg_attr(feature = "no-panic", no_panic)]
 pub fn parse_partial<T: FastFloat, S: AsRef<[u8]>>(s: S) -> Result<(T, usize)> {
     T::parse_float_partial(s)
-}
-
-pub(crate) trait GetAt<Index, R: ?Sized> {
-    fn at(&self, index: Index) -> &R;
-}
-
-impl<T> GetAt<usize, T> for [T] {
-    fn at(&self, index: usize) -> &T {
-        #[cfg(not(feature = "no-panic"))]
-        let r = &self[index];
-        #[cfg(feature = "no-panic")]
-        let r = unsafe { self.get_unchecked(index) };
-        r
-    }
-}
-
-impl<T> GetAt<RangeFrom<usize>, [T]> for [T] {
-    fn at(&self, index: RangeFrom<usize>) -> &[T] {
-        #[cfg(not(feature = "no-panic"))]
-        let r = &self[index];
-        #[cfg(feature = "no-panic")]
-        let r = unsafe { self.get_unchecked(index) };
-        r
-    }
-}
-
-impl<T> GetAt<RangeTo<usize>, [T]> for [T] {
-    fn at(&self, index: RangeTo<usize>) -> &[T] {
-        #[cfg(not(feature = "no-panic"))]
-        let r = &self[index];
-        #[cfg(feature = "no-panic")]
-        let r = unsafe { self.get_unchecked(index) };
-        r
-    }
-}
-
-pub(crate) trait GetAtMut<Index, R: ?Sized> {
-    fn at_mut(&mut self, index: Index) -> &mut R;
-}
-
-impl<T> GetAtMut<usize, T> for [T] {
-    fn at_mut(&mut self, index: usize) -> &mut T {
-        #[cfg(not(feature = "no-panic"))]
-        let r = &mut self[index];
-        #[cfg(feature = "no-panic")]
-        let r = unsafe { self.get_unchecked_mut(index) };
-        r
-    }
-}
-
-impl<T> GetAtMut<RangeFrom<usize>, [T]> for [T] {
-    fn at_mut(&mut self, index: RangeFrom<usize>) -> &mut [T] {
-        #[cfg(not(feature = "no-panic"))]
-        let r = &mut self[index];
-        #[cfg(feature = "no-panic")]
-        let r = unsafe { self.get_unchecked_mut(index) };
-        r
-    }
 }
