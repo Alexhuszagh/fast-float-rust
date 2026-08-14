@@ -4,6 +4,7 @@ use crate::float::Float;
 use crate::GetAt;
 
 #[inline]
+#[allow(clippy::redundant_pub_crate)] // NOTE: ensure this is never exposed due to no-panic safety
 pub(crate) fn parse_long_mantissa<F: Float>(s: &[u8]) -> AdjustedMantissa {
     const MAX_SHIFT: usize = 60;
     const NUM_POWERS: usize = 19;

@@ -1,3 +1,5 @@
+#![allow(unnecessary_transmutes)] // NOTE: `f32::from_bits` is const in rust 1.83.0
+
 #[test]
 #[ignore]
 fn test_f64_random_from_u64() {

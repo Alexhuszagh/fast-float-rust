@@ -49,7 +49,8 @@ impl PartialEq for Decimal {
     }
 }
 
-impl Eq for Decimal {}
+impl Eq for Decimal {
+}
 
 impl Default for Decimal {
     fn default() -> Self {
@@ -203,13 +204,15 @@ impl Decimal {
 }
 
 #[inline]
+#[allow(clippy::redundant_pub_crate)] // NOTE: ensure this is never exposed due to no-panic safety
 pub(crate) fn parse_decimal(mut s: &[u8]) -> Decimal {
     // can't fail since it follows a call to parse_number
-    // NOTE: This is a valid since it **ALWAYS** must be called from `parse_long_mantissa`
-    // which calls it from `parse_float` which calls `parse_number`. Since if `no-panic`
-    // is not enabled, this panics both here and at the next step, this **ONLY**
-    // introduces non-local safety invariants if `no-panic` is true, however, all the
-    // core logic is identical.
+    // NOTE: This is a valid since it **ALWAYS** must be called from
+    // `parse_long_mantissa` which calls it from `parse_float` which calls
+    // `parse_number`. Since if `no-panic` is not enabled, this panics both here
+    // and at the next step, this **ONLY** introduces non-local safety
+    // invariants if `no-panic` is true, however, all the core logic is
+    // identical.
     no_panic_assert!(
         !s.is_empty(),
         "the buffer cannot be empty since it follows a call to parse_number"
@@ -358,7 +361,7 @@ fn number_of_digits_decimal_left_shift(d: &Decimal, mut shift: usize) -> usize {
         if i >= d.num_digits {
             return num_new_digits - 1;
         } else if *d.digits.at(i) == p5 {
-            continue;
+            // NOTE: Explicitly empty
         } else if *d.digits.at(i) < p5 {
             return num_new_digits - 1;
         } else {

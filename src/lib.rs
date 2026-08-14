@@ -44,8 +44,7 @@
     clippy::unnecessary_safety_comment,
     clippy::semicolon_if_nothing_returned,
     clippy::unwrap_used,
-    clippy::as_underscore,
-    clippy::doc_markdown
+    clippy::as_underscore
 )]
 #![allow(
     clippy::cast_possible_truncation,
@@ -57,14 +56,15 @@
     clippy::use_self,
     clippy::module_name_repetitions,
     clippy::cargo_common_metadata,
-    clippy::struct_field_names
+    clippy::struct_field_names,
+    clippy::negative_feature_names
 )]
-
-#[cfg(feature = "no-panic")]
-use no_panic::no_panic;
 
 use core::fmt::{self, Display};
 use core::ops::{RangeFrom, RangeTo};
+
+#[cfg(feature = "no-panic")]
+use no_panic::no_panic;
 
 mod binary;
 mod common;
@@ -128,8 +128,10 @@ pub trait FastFloat: float::Float {
     }
 }
 
-impl FastFloat for f32 {}
-impl FastFloat for f64 {}
+impl FastFloat for f32 {
+}
+impl FastFloat for f64 {
+}
 
 /// Parse a decimal number from string into float (full).
 ///
